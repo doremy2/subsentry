@@ -25,10 +25,10 @@ npm run make              # installer for the current OS in out/make/
 macOS produces `.app` + `.dmg` (+ zip) per architecture; Windows produces `SubSentry-Setup.exe` (+ zip). **Mac users:** download the `arm64` DMG for Apple Silicon (M1 and newer) or the `x64` DMG for Intel Macs (see [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md)). CI builds both on separate runners; see [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md) for signing and notarization.
 
 ## Using it
-- Drag the widget by its header or spend area; position is remembered per device.
+- Drag the widget by its header or spend area; position is remembered per device. Resize it by dragging its right edge, bottom edge or corner (per-layout size is remembered too).
 - "Manage subscriptions" expands it; the collapse button returns to compact.
 - Hide sends it to the tray (Windows) / menu bar (macOS). Click the icon to toggle, right-click for the menu (Show/Hide, Always on top, Quit). Closing the window also just hides it.
-- Settings (in the manager): accent color, transparency, always on top, launch at login (packaged builds only), renewal reminders (days before, earliest time of day), test notification.
+- Settings (in the manager): theme (5), accent color, compact layout (Detailed/Minimal), reset window size, transparency, always on top, launch at login (packaged builds only), renewal reminders (days before, earliest time of day), test notification.
 - Demo data is inserted on first launch only. Database location: Electron's `userData` folder (`~/Library/Application Support/SubSentry` or `%APPDATA%\SubSentry`), file `subsentry.db`.
 
 ## Project layout

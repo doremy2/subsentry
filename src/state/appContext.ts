@@ -22,6 +22,10 @@ export interface AppActions {
   updatePreferences(patch: Partial<Preferences>): Promise<void>;
   setMode(mode: WidgetMode): Promise<void>;
   hideWindow(): Promise<void>;
+  /** Window resize via grips (no-ops in a browser preview). */
+  beginResize(axis: "both" | "x" | "y"): Promise<void>;
+  endResize(): Promise<void>;
+  resetWindowSize(): Promise<void>;
   quit(): Promise<void>;
   showTestNotification(): Promise<void>;
   /** "darwin" | "win32" | "linux" in Electron, "web" in a browser preview. */

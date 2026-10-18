@@ -12,9 +12,10 @@ export function App() {
 
   // Appearance preferences drive CSS variables on <html>.
   useEffect(() => {
+    document.documentElement.dataset["theme"] = preferences.theme;
     document.documentElement.dataset["accent"] = preferences.accent;
     document.documentElement.style.setProperty("--surface-alpha", String(preferences.opacity));
-  }, [preferences.accent, preferences.opacity]);
+  }, [preferences.theme, preferences.accent, preferences.opacity]);
 
   // A file dropped outside the drop zone must never navigate the window to that file.
   useEffect(() => {

@@ -14,6 +14,9 @@ export interface IpcDependencies {
   trustedSender: () => WebContents | undefined;
   setMode(mode: WidgetMode): void;
   hideWindow(): void;
+  beginResize(axis: "both" | "x" | "y"): void;
+  endResize(): void;
+  resetSize(): void;
   quit(): void;
   /** Apply OS side effects of a preference change (always-on-top, login item, tray check mark). */
   applyPreferences(prefs: Preferences, patch: Partial<Preferences>): void;
@@ -73,6 +76,12 @@ export function registerIpc(deps: IpcDependencies): void {
     store.savePreferences({ mode });
   });
   handle(CHANNELS.windowHide, deps, () => deps.hideWindow());
+  handle(CHANNELS.windowResizeStart, deps, (axis) => {
+    if (axis !== "both" && axis !== "x" && axis !== "y") throw new Error("Invalid resize axis.");
+    deps.beginResize(axis);
+  });
+  handle(CHANNELS.windowResizeEnd, deps, () => deps.endResize());
+  handle(CHANNELS.windowResetSize, deps, () => deps.resetSize());
   handle(CHANNELS.appQuit, deps, () => deps.quit());
   handle(CHANNELS.systemTestNotification, deps, () => deps.showTestNotification());
 

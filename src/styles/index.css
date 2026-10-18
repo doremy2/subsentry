@@ -3,20 +3,79 @@
 @theme inline {
   --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Inter", sans-serif;
   --color-accent: var(--accent);
-  --color-ink: #f2f3f8;
-  --color-danger: #ff6b7a;
-  --color-ok: #4ade9a;
-  --color-warn: #fbbf4a;
+  --color-ink: var(--ink);
+  --color-danger: var(--danger);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
 }
 
-/* Accent palettes, applied with <html data-accent="…">. Restrained, slightly desaturated. */
+/*
+ * THEMES: <html data-theme="..."> swaps these variables. Every component uses translucent
+ * `white/NN` utilities, which Tailwind compiles against --color-white, so the light theme
+ * simply redefines --color-white as dark ink and the whole UI flips with it.
+ *   --surface    card base color (rgb triplet), combined with the user's transparency
+ *   --glow       decorative gradient layered on top of the surface
+ *   --overlay    solid color for popovers and dialogs
+ */
+:root,
+:root[data-theme="midnight"] {
+  --surface: 15 16 24;
+  --glow: linear-gradient(160deg, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0) 40%);
+  --ink: #f2f3f8;
+  --overlay: #171824;
+  --table-head: #1b1c28;
+  --on-accent: #0d0e16;
+  --danger: #ff6b7a;
+  --ok: #4ade9a;
+  --warn: #fbbf4a;
+  --card-shadow: 0 18px 48px -12px rgb(0 0 0 / 0.55), 0 2px 8px rgb(0 0 0 / 0.3);
+  --surface-alpha: 0.82;
+  color-scheme: dark;
+}
+:root[data-theme="graphite"] {
+  --surface: 29 29 32;
+  --glow: linear-gradient(160deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0) 45%);
+  --overlay: #242428;
+  --table-head: #2b2b30;
+}
+:root[data-theme="aurora"] {
+  --surface: 6 21 30;
+  --glow: radial-gradient(120% 80% at 0% 0%, rgb(45 212 191 / 0.17), transparent 55%), radial-gradient(90% 70% at 100% 100%, rgb(99 102 241 / 0.15), transparent 60%);
+  --overlay: #0e202b;
+  --table-head: #123039;
+}
+:root[data-theme="sunset"] {
+  --surface: 31 14 29;
+  --glow: radial-gradient(120% 80% at 100% 0%, rgb(251 146 60 / 0.17), transparent 55%), radial-gradient(90% 70% at 0% 100%, rgb(236 72 153 / 0.15), transparent 60%);
+  --overlay: #29132a;
+  --table-head: #351a35;
+}
+:root[data-theme="light"] {
+  --color-white: #12131c; /* flips every white/NN utility to dark ink */
+  --surface: 248 249 253;
+  --glow: linear-gradient(160deg, rgb(255 255 255 / 0.8), rgb(255 255 255 / 0) 50%);
+  --ink: #14151f;
+  --overlay: #ffffff;
+  --table-head: #edeff6;
+  --on-accent: #ffffff;
+  --danger: #d12f4b;
+  --ok: #0c8a57;
+  --warn: #a86a00;
+  --card-shadow: 0 18px 44px -14px rgb(20 24 60 / 0.28), 0 2px 8px rgb(20 24 60 / 0.12);
+  color-scheme: light;
+}
+
+/* Accent palettes, applied with <html data-accent="...">. Restrained, slightly desaturated. */
 :root,
 [data-accent="indigo"] { --accent: #8b8cff; }
 [data-accent="teal"] { --accent: #4fd1c5; }
 [data-accent="rose"] { --accent: #ff7a9c; }
 [data-accent="amber"] { --accent: #f5b84b; }
-
-:root { color-scheme: dark; --surface-alpha: 0.82; }
+/* Brighter accents are too pale on a light card; use deeper variants there. */
+[data-theme="light"][data-accent="indigo"] { --accent: #5456e0; }
+[data-theme="light"][data-accent="teal"] { --accent: #0b8f84; }
+[data-theme="light"][data-accent="rose"] { --accent: #d6336c; }
+[data-theme="light"][data-accent="amber"] { --accent: #b86e00; }
 
 html,
 body,
@@ -29,7 +88,7 @@ body,
 
 body {
   font-family: var(--font-sans);
-  color: var(--color-ink);
+  color: var(--ink);
   -webkit-font-smoothing: antialiased;
   user-select: none; /* feels native; inputs re-enable below */
   cursor: default;
@@ -39,35 +98,44 @@ input,
 select,
 textarea { user-select: text; }
 
-/* The widget surface: translucent dark glass with a soft shadow inside the window margin. */
+/* The widget surface: translucent glass with a soft shadow inside the window margin. */
 .card {
-  background:
-    linear-gradient(160deg, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0) 40%),
-    rgb(15 16 24 / var(--surface-alpha));
-  border: 1px solid rgb(255 255 255 / 0.09);
-  box-shadow: 0 18px 48px -12px rgb(0 0 0 / 0.55), 0 2px 8px rgb(0 0 0 / 0.3);
+  background-color: rgb(var(--surface) / var(--surface-alpha));
+  background-image: var(--glow);
+  border: 1px solid color-mix(in srgb, var(--color-white) 9%, transparent);
+  box-shadow: var(--card-shadow);
+  transition: background-color 0.35s ease, border-color 0.35s ease;
 }
 
-.panel { background: rgb(255 255 255 / 0.045); border: 1px solid rgb(255 255 255 / 0.06); }
+.panel {
+  background: color-mix(in srgb, var(--color-white) 4.5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-white) 6%, transparent);
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+/* Subtle hover lift for clickable cards and rows. */
+.lift { transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease; }
+.lift:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -10px rgb(0 0 0 / 0.45); }
+.lift:active { transform: translateY(0) scale(0.995); }
 
 .field {
   width: 100%;
   border-radius: 0.75rem;
-  background: rgb(255 255 255 / 0.06);
-  border: 1px solid rgb(255 255 255 / 0.09);
+  background: color-mix(in srgb, var(--color-white) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-white) 9%, transparent);
   padding: 0.55rem 0.75rem;
   font-size: 0.875rem;
   outline: none;
   transition: border-color 0.15s, background 0.15s;
 }
-.field:hover { background: rgb(255 255 255 / 0.08); }
-.field:focus { border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: rgb(255 255 255 / 0.09); }
-.field[aria-invalid="true"] { border-color: color-mix(in srgb, var(--color-danger) 70%, transparent); }
-.field option { background: #1a1b26; }
+.field:hover { background: color-mix(in srgb, var(--color-white) 8%, transparent); }
+.field:focus { border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: color-mix(in srgb, var(--color-white) 9%, transparent); }
+.field[aria-invalid="true"] { border-color: color-mix(in srgb, var(--danger) 70%, transparent); }
+.field option { background: var(--overlay); color: var(--ink); }
 
 /* Slim, quiet scrollbars. */
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-thumb { background: rgb(255 255 255 / 0.14); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--color-white) 14%, transparent); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
 ::-webkit-scrollbar-track { background: transparent; }
 
 @keyframes fade-up {

@@ -1,7 +1,7 @@
 import { BrowserWindow, screen, shell } from "electron";
 import { join } from "node:path";
 import type { WidgetMode } from "../../src/data/types";
-import { WINDOW_SIZES } from "../shared/windowSizes";
+import { clampSize, DEFAULT_SIZES, layoutKeyFor, resizedSize, type LayoutKey, type ResizeAxis, type Size } from "../shared/windowSizes";
 import type { Store } from "./db/store";
 import { applyAlwaysOnTop, deviceId, widgetWindowOptions } from "./platform";
 
@@ -35,9 +35,25 @@ function defaultPosition(width: number): { x: number; y: number } {
   return { x: a.x + a.width - width - SCREEN_MARGIN, y: a.y + SCREEN_MARGIN };
 }
 
+/** Room the window may occupy on the display it is on, measured from its current top-left corner. */
+function roomFrom(rect: Rect): Size {
+  const { workArea: a } = screen.getDisplayMatching(rect);
+  return { width: a.x + a.width - rect.x, height: a.y + a.height - rect.y };
+}
+
+const RESIZE_TICK_MS = 16; // ~60 Hz
+const RESIZE_MAX_MS = 60_000; // safety net if the renderer never reports mouse-up
+
 export interface WidgetWindow {
   window: BrowserWindow;
   setMode(mode: WidgetMode): void;
+  /** Re-apply the size for the current layout (after the compact layout preference changed). */
+  applyLayout(): void;
+  /** Start a user resize; the window follows the cursor until `endResize`. */
+  beginResize(axis: ResizeAxis): void;
+  endResize(): void;
+  /** Forget saved sizes and return the current layout to its default size. */
+  resetSize(): void;
   toggleVisibility(): void;
   show(): void;
   hide(): void;
@@ -45,7 +61,9 @@ export interface WidgetWindow {
 
 export function createWidgetWindow(store: Store, options: { mode: WidgetMode; alwaysOnTop: boolean; isQuitting: () => boolean }): WidgetWindow {
   const device = deviceId();
-  const size = WINDOW_SIZES[options.mode];
+  const compactLayout = store.loadPreferences().compactLayout;
+  const sizeFor = (key: LayoutKey, room?: Size): Size => clampSize(key, store.getWindowSize(device, key) ?? DEFAULT_SIZES[key], room);
+  const size = sizeFor(layoutKeyFor(options.mode, compactLayout));
   const saved = store.getWindowPosition(device);
   const position = saved && isReachable(saved.x, saved.y, size.width) ? saved : defaultPosition(size.width);
 
@@ -92,13 +110,62 @@ export function createWidgetWindow(store: Store, options: { mode: WidgetMode; al
     }, SAVE_DEBOUNCE_MS);
   });
 
+  /** Fit the window to `key`'s saved (or default) size, anchored at its top-left corner and kept on screen. */
+  const fitTo = (key: LayoutKey) => {
+    const [x = 0, y = 0] = window.getPosition();
+    // Size limit = the whole display (clampToDisplay then slides the window left/up to fit),
+    // unlike a user drag, which keeps the top-left corner fixed and is limited by the room to its right/bottom.
+    const { workArea } = screen.getDisplayMatching({ x, y, width: 1, height: 1 });
+    const next = sizeFor(key, { width: workArea.width, height: workArea.height });
+    window.setBounds(clampToDisplay({ x, y, ...next }));
+  };
+
+  let resize: { timer: NodeJS.Timeout; stopAt: NodeJS.Timeout; key: LayoutKey } | null = null;
+
+  const endResize = () => {
+    if (!resize) return;
+    clearInterval(resize.timer);
+    clearTimeout(resize.stopAt);
+    const { key } = resize;
+    resize = null;
+    if (window.isDestroyed()) return;
+    const [width = 0, height = 0] = window.getSize();
+    store.setWindowSize(device, key, { width, height }); // remembered per device and layout
+  };
+  window.on("closed", endResize);
+
   return {
     window,
     setMode(mode) {
-      const next = WINDOW_SIZES[mode];
-      const [x = 0, y = 0] = window.getPosition();
-      // Anchor the top-left corner; nudge back on-screen if growing would overflow.
-      window.setBounds(clampToDisplay({ x, y, ...next }));
+      fitTo(layoutKeyFor(mode, store.loadPreferences().compactLayout));
+    },
+    applyLayout() {
+      const prefs = store.loadPreferences();
+      fitTo(layoutKeyFor(prefs.mode, prefs.compactLayout));
+    },
+    beginResize(axis) {
+      endResize();
+      const prefs = store.loadPreferences();
+      const key = layoutKeyFor(prefs.mode, prefs.compactLayout);
+      const [width = 0, height = 0] = window.getSize();
+      const start = { size: { width, height }, cursor: screen.getCursorScreenPoint() };
+      // The window follows the OS cursor, so it works the same on Windows and macOS and
+      // does not depend on native resize borders (unsupported on transparent Windows windows).
+      const timer = setInterval(() => {
+        if (window.isDestroyed()) return endResize();
+        const cursor = screen.getCursorScreenPoint();
+        const [x = 0, y = 0] = window.getPosition();
+        const next = resizedSize(start.size, { dx: cursor.x - start.cursor.x, dy: cursor.y - start.cursor.y }, axis, key, roomFrom({ x, y, width: 1, height: 1 }));
+        const [w = 0, h = 0] = window.getSize();
+        if (next.width !== w || next.height !== h) window.setBounds({ x, y, ...next });
+      }, RESIZE_TICK_MS);
+      resize = { timer, key, stopAt: setTimeout(endResize, RESIZE_MAX_MS) };
+    },
+    endResize,
+    resetSize() {
+      endResize();
+      store.clearWindowSizes(device);
+      this.applyLayout();
     },
     show() {
       window.show();

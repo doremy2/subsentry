@@ -87,6 +87,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setState((s) => ({ ...s, preferences: { ...s.preferences, mode } }));
       },
       hideWindow: () => rt().win.hide(),
+      beginResize: (axis) => rt().win.beginResize(axis),
+      endResize: () => rt().win.endResize(),
+      resetWindowSize: () => rt().win.resetSize(),
       quit: () => rt().win.quit(),
       showTestNotification: () => rt().win.showTestNotification(),
       platform: getRuntime().win.platform,

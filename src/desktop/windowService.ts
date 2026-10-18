@@ -10,6 +10,10 @@ export interface WindowService {
   setMode(mode: WidgetMode): Promise<void>;
   /** Hide to the tray / menu bar. */
   hide(): Promise<void>;
+  /** Resize grips: the main process moves the window edge with the cursor between begin and end. */
+  beginResize(axis: "both" | "x" | "y"): Promise<void>;
+  endResize(): Promise<void>;
+  resetSize(): Promise<void>;
   quit(): Promise<void>;
   showTestNotification(): Promise<void>;
   /** Subscribe to preference changes made outside the UI (tray menu). Returns unsubscribe. */
@@ -21,12 +25,15 @@ const noop = async () => {};
 export function createWindowService(): WindowService {
   const api = window.subsentry;
   if (!api) {
-    return { platform: "web", setMode: noop, hide: noop, quit: noop, showTestNotification: noop, onPreferencesChanged: () => () => {} };
+    return { platform: "web", setMode: noop, hide: noop, beginResize: noop, endResize: noop, resetSize: noop, quit: noop, showTestNotification: noop, onPreferencesChanged: () => () => {} };
   }
   return {
     platform: api.platform,
     setMode: api.window.setMode,
     hide: api.window.hide,
+    beginResize: api.window.beginResize,
+    endResize: api.window.endResize,
+    resetSize: api.window.resetSize,
     quit: api.app.quit,
     showTestNotification: api.system.showTestNotification,
     onPreferencesChanged: api.preferences.onChanged,

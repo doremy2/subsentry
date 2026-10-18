@@ -55,6 +55,7 @@ void app.whenReady().then(() => {
   const applyPreferences = (prefs: Preferences, patch: Partial<Preferences>) => {
     if (patch.alwaysOnTop !== undefined) applyAlwaysOnTop(win, prefs.alwaysOnTop);
     if (patch.launchOnLogin !== undefined) setLaunchOnLogin(prefs.launchOnLogin);
+    if (patch.compactLayout !== undefined) widget?.applyLayout(); // each layout has its own size
     tray?.update({ alwaysOnTop: prefs.alwaysOnTop });
   };
 
@@ -83,6 +84,9 @@ void app.whenReady().then(() => {
     trustedSender: () => (win.isDestroyed() ? undefined : win.webContents),
     setMode: (mode) => widget?.setMode(mode),
     hideWindow: () => widget?.hide(),
+    beginResize: (axis) => widget?.beginResize(axis),
+    endResize: () => widget?.endResize(),
+    resetSize: () => widget?.resetSize(),
     quit: () => app.quit(),
     applyPreferences,
     showTestNotification: () => void showNotification("SubSentry", "Notifications are working. You will be reminded before renewals.", () => widget?.show()),

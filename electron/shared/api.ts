@@ -1,4 +1,5 @@
 import type { Preferences, WidgetMode } from "../../src/data/types";
+import type { ResizeAxis } from "./windowSizes";
 import type { DetectionOutcome, Transaction } from "../../src/domain/detection/types";
 import type { Subscription, SubscriptionInput } from "../../src/domain/subscription";
 
@@ -13,6 +14,9 @@ export const CHANNELS = {
   preferencesChanged: "preferences:changed", // main -> renderer push
   windowSetMode: "window:setMode",
   windowHide: "window:hide",
+  windowResizeStart: "window:resizeStart",
+  windowResizeEnd: "window:resizeEnd",
+  windowResetSize: "window:resetSize",
   appQuit: "app:quit",
   systemTestNotification: "system:testNotification",
   detectionAnalyze: "detection:analyze",
@@ -43,6 +47,11 @@ export interface SubSentryApi {
     setMode(mode: WidgetMode): Promise<void>;
     /** Hide to the tray / menu bar. */
     hide(): Promise<void>;
+    /** Begin a user resize from a grip; the window follows the cursor until `endResize`. */
+    beginResize(axis: ResizeAxis): Promise<void>;
+    endResize(): Promise<void>;
+    /** Return the current layout to its default size and forget saved sizes for this device. */
+    resetSize(): Promise<void>;
   };
   app: { quit(): Promise<void> };
   system: { showTestNotification(): Promise<void> };
