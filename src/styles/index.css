@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Inter", sans-serif;
+  --color-accent: var(--accent);
+  --color-ink: #f2f3f8;
+  --color-danger: #ff6b7a;
+  --color-ok: #4ade9a;
+  --color-warn: #fbbf4a;
+}
+
+/* Accent palettes, applied with <html data-accent="…">. Restrained, slightly desaturated. */
+:root,
+[data-accent="indigo"] { --accent: #8b8cff; }
+[data-accent="teal"] { --accent: #4fd1c5; }
+[data-accent="rose"] { --accent: #ff7a9c; }
+[data-accent="amber"] { --accent: #f5b84b; }
+
+:root { color-scheme: dark; --surface-alpha: 0.82; }
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: transparent; /* the OS window is transparent; only the card paints */
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  user-select: none; /* feels native; inputs re-enable below */
+  cursor: default;
+}
+
+input,
+select,
+textarea { user-select: text; }
+
+/* The widget surface: translucent dark glass with a soft shadow inside the window margin. */
+.card {
+  background:
+    linear-gradient(160deg, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0) 40%),
+    rgb(15 16 24 / var(--surface-alpha));
+  border: 1px solid rgb(255 255 255 / 0.09);
+  box-shadow: 0 18px 48px -12px rgb(0 0 0 / 0.55), 0 2px 8px rgb(0 0 0 / 0.3);
+}
+
+.panel { background: rgb(255 255 255 / 0.045); border: 1px solid rgb(255 255 255 / 0.06); }
+
+.field {
+  width: 100%;
+  border-radius: 0.75rem;
+  background: rgb(255 255 255 / 0.06);
+  border: 1px solid rgb(255 255 255 / 0.09);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.field:hover { background: rgb(255 255 255 / 0.08); }
+.field:focus { border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: rgb(255 255 255 / 0.09); }
+.field[aria-invalid="true"] { border-color: color-mix(in srgb, var(--color-danger) 70%, transparent); }
+.field option { background: #1a1b26; }
+
+/* Slim, quiet scrollbars. */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb { background: rgb(255 255 255 / 0.14); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-track { background: transparent; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.97) translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-fade-up { animation: fade-up 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.animate-fade-in { animation: fade-in 0.2s ease both; }
+.animate-pop { animation: pop 0.22s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

@@ -1,0 +1,30 @@
+import { useEffect } from "react";
+import { ManagerView } from "./components/manager/ManagerView";
+import { ErrorState, Spinner } from "./components/ui/Feedback";
+import { CompactWidget } from "./components/widget/CompactWidget";
+import { useApp } from "./state/appContext";
+
+/** Window margin (px) left transparent around the card so its CSS shadow isn't clipped. */
+const SHADOW_MARGIN = 16;
+
+export function App() {
+  const { status, fatalError, retry, preferences } = useApp();
+
+  // Appearance preferences drive CSS variables on <html>.
+  useEffect(() => {
+    document.documentElement.dataset["accent"] = preferences.accent;
+    document.documentElement.style.setProperty("--surface-alpha", String(preferences.opacity));
+  }, [preferences.accent, preferences.opacity]);
+
+  return (
+    <div className="h-full" style={{ padding: SHADOW_MARGIN }}>
+      {status === "ready" ? (
+        preferences.mode === "expanded" ? <ManagerView key="expanded" /> : <CompactWidget key="compact" />
+      ) : (
+        <div data-tauri-drag-region className="card grid h-full place-items-center rounded-[28px]">
+          {status === "error" ? <ErrorState message={fatalError ?? "Unknown error."} onRetry={retry} /> : <Spinner />}
+        </div>
+      )}
+    </div>
+  );
+}
