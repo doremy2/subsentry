@@ -2,12 +2,23 @@
 
 ## What CI produces
 `.github/workflows/ci.yml` runs checks on Ubuntu, then builds on **separate native runners**:
-- `macos-latest` -> universal (Intel + Apple Silicon) `.app` inside a `.dmg` (+ zip)
+- `macos-latest`, **two separate builds**: `arm64` (Apple Silicon) and `x64` (Intel), each a `.app` inside a `.dmg` (+ zip). A job named `build-macos` passes only if both succeed.
 - `windows-latest` -> Squirrel installer `SubSentry-Setup.exe` (+ nupkg, zip)
 
 Artifacts appear on each workflow run. Builds are **unsigned** until you add the secrets below.
 
-Locally: `npm run make` builds for the OS you are on (DMG only on macOS, installer only on Windows).
+Locally: `npm run make` builds for the OS and CPU you are on (DMG only on macOS, installer only on Windows). On a Mac you can pick the other architecture with `npm run make -- --arch=x64` (or `--arch=arm64`).
+
+## Which Mac installer should I download?
+| Your Mac | Download |
+|---|---|
+| Apple Silicon: M1, M2, M3, M4 (any "Chip: Apple M..." in  > About This Mac) | `SubSentry-<version>-mac-arm64.dmg` |
+| Intel (shows "Processor: Intel ..." in  > About This Mac) | `SubSentry-<version>-mac-x64.dmg` |
+| Windows 10/11 | `SubSentry-Setup.exe` |
+
+The Intel build also runs on Apple Silicon through Rosetta 2, but slower; use the arm64 one on M-series Macs. Open the `.dmg` and drag SubSentry to Applications. Unsigned builds need right-click > Open the first time (see below).
+
+Why not one universal installer? The universal merge step (`--arch=universal`) failed in CI with "the number of mach-o files is not the same between the arm64 and x64 builds". Our app has no native modules (its packaged `app.asar` contains only bundled JavaScript), so the separate builds are simple and reliable. Both are cross-built on one Apple Silicon runner. A universal build can be revisited later.
 
 ## Why signing matters
 | Platform | Unsigned experience for other people |

@@ -28,11 +28,20 @@ jobs:
       - run: npm test
 
   # Separate native runners: each OS builds and packages its own installer.
-  build-macos:
+  # macOS: one build per CPU architecture instead of a universal binary. (The universal merge step
+  # failed with "number of mach-o files is not the same between arm64 and x64"; separate builds avoid it.)
+  # Both are cross-built on the same Apple Silicon runner: the app has no native modules.
+  build-macos-packages:
+    name: build-macos-packages (${{ matrix.arch }})
     needs: verify
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x64]
     env:
       HAS_CERT: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 != '' }}
+      ARCH: ${{ matrix.arch }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,20 +61,44 @@ jobs:
           security unlock-keychain -p ci "$RUNNER_TEMP/ci.keychain"
           security import "$RUNNER_TEMP/cert.p12" -k "$RUNNER_TEMP/ci.keychain" -P "$CERT_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k ci "$RUNNER_TEMP/ci.keychain"
-      - name: Build .app + .dmg
+      - name: Build .app + .dmg (${{ matrix.arch }})
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: npm run make -- --arch=universal
+        run: npm run make -- --arch=${{ matrix.arch }}
+      - name: Verify the app really is ${{ matrix.arch }}
+        env:
+          EXPECTED: ${{ matrix.arch == 'arm64' && 'arm64' || 'x86_64' }}
+        run: |
+          BIN=$(find out -path "*darwin-$ARCH*" -path "*Contents/MacOS/*" -type f | head -1)
+          echo "binary: $BIN"
+          file "$BIN"
+          file "$BIN" | grep -q "$EXPECTED"
+      - name: Name the installer by architecture
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          for f in out/make/*.dmg; do mv "$f" "out/make/SubSentry-$VERSION-mac-$ARCH.dmg"; done
+          ls -la out/make out/make/zip/darwin/* || true
       - uses: actions/upload-artifact@v4
         with:
-          name: SubSentry-macos
+          name: SubSentry-macos-${{ matrix.arch }}
           path: |
             out/make/*.dmg
             out/make/zip/darwin/**/*.zip
           if-no-files-found: error
+
+  # Stable check name for branch protection: passes only if BOTH macOS architectures built.
+  build-macos:
+    needs: build-macos-packages
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require arm64 and x64 builds
+        run: |
+          echo "macOS package builds: ${{ needs.build-macos-packages.result }}"
+          test "${{ needs.build-macos-packages.result }}" = "success"
 
   build-windows:
     needs: verify
