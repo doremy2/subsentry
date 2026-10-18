@@ -47,7 +47,7 @@ docs/               architecture, data model, branching, roadmap, distribution
 Two developers, protected `main`, feature branches + pull requests: see [docs/BRANCHING.md](docs/BRANCHING.md). First-time GitHub setup: [docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md). Work in the cloud with [GitHub Codespaces](docs/CODESPACES.md) (editing, tests and builds only: the desktop window needs a local macOS/Windows machine).
 
 ## Docs
-[Architecture](docs/ARCHITECTURE.md) · [Data model](docs/DATA_MODEL.md) · [Roadmap](docs/ROADMAP.md) · [Branching](docs/BRANCHING.md) · [GitHub setup](docs/GITHUB_SETUP.md) · [Codespaces](docs/CODESPACES.md) · [Distribution & signing](docs/DISTRIBUTION.md) · [AGENTS.md](AGENTS.md)
+[Architecture](docs/ARCHITECTURE.md) · [Data model](docs/DATA_MODEL.md) · [Roadmap](docs/ROADMAP.md) · [Branching](docs/BRANCHING.md) · [GitHub setup](docs/GITHUB_SETUP.md) · [Codespaces](docs/CODESPACES.md) · [Distribution & signing](docs/DISTRIBUTION.md) · [Testing 5A on Mac/Windows](docs/TESTING_5A.md) · [AGENTS.md](AGENTS.md)
 
 ## Known limits
 Transparency works on both OSes; blur/vibrancy, wallpaper-layer embedding, CSV detection (Milestone 4) and auto-update are not built yet. The earlier Tauri prototype is preserved at git tag `tauri-prototype`.

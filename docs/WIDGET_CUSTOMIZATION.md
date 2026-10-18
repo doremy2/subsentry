@@ -14,6 +14,9 @@ Branch: `feature/widget-customization` (Developer 1). Window/shell code is in `e
 | **Persistence** | SQLite | Theme/accent/opacity/layout in `preferences`; **size per layout and per device** and position per device (`windowSizes`, `windowPositions`). "Reset window size" restores defaults. |
 | **Animation / hover** | CSS | Theme cross-fade, hover lift on cards/rows, press feedback; `prefers-reduced-motion` respected. |
 
+## Position when expanding and collapsing
+Expanding can slide the window left/up so the bigger window fits on screen. The compact widget's position is remembered at that moment (`electron/shared/windowPlacement.ts`, used by `window.ts`). On collapse the widget returns to it, **unless you moved the window while it was expanded**, in which case it stays where you put it (compared with a 2 px tolerance). The memory is in-process only: if the app restarts while expanded, collapsing keeps the current spot.
+
 ## How resizing works (and why)
 Electron cannot reliably resize *transparent frameless* windows from their native edges on Windows. So resizing is ours: the grips in `ResizeGrips.tsx` tell the main process to start/stop; `window.ts` follows `screen.getCursorScreenPoint()` at ~60 Hz and calls `setBounds` with `resizedSize()` (pure, unit-tested). Same code path on macOS and Windows. A 60 s safety timer ends a drag if the renderer never reports mouse-up.
 

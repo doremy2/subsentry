@@ -1,6 +1,7 @@
 import { BrowserWindow, screen, shell } from "electron";
 import { join } from "node:path";
 import type { WidgetMode } from "../../src/data/types";
+import { EMPTY_PLACEMENT, originOnCollapse, rememberAfterExpand, rememberBeforeExpand, type PlacementMemory, type Point } from "../shared/windowPlacement";
 import { clampSize, DEFAULT_SIZES, layoutKeyFor, resizedSize, type LayoutKey, type ResizeAxis, type Size } from "../shared/windowSizes";
 import type { Store } from "./db/store";
 import { applyAlwaysOnTop, deviceId, widgetWindowOptions } from "./platform";
@@ -110,15 +111,20 @@ export function createWidgetWindow(store: Store, options: { mode: WidgetMode; al
     }, SAVE_DEBOUNCE_MS);
   });
 
-  /** Fit the window to `key`'s saved (or default) size, anchored at its top-left corner and kept on screen. */
-  const fitTo = (key: LayoutKey) => {
-    const [x = 0, y = 0] = window.getPosition();
+  /** Fit the window to `key`'s saved (or default) size, anchored at `origin` (default: where it is now) and kept on screen. */
+  const fitTo = (key: LayoutKey, origin?: Point) => {
+    const [cx = 0, cy = 0] = window.getPosition();
+    const { x, y } = origin ?? { x: cx, y: cy };
     // Size limit = the whole display (clampToDisplay then slides the window left/up to fit),
     // unlike a user drag, which keeps the top-left corner fixed and is limited by the room to its right/bottom.
     const { workArea } = screen.getDisplayMatching({ x, y, width: 1, height: 1 });
     const next = sizeFor(key, { width: workArea.width, height: workArea.height });
     window.setBounds(clampToDisplay({ x, y, ...next }));
   };
+
+  // Expanding can slide the window to fit; collapsing puts it back unless the user moved it meanwhile.
+  let currentMode: WidgetMode = options.mode;
+  let placement: PlacementMemory = EMPTY_PLACEMENT;
 
   let resize: { timer: NodeJS.Timeout; stopAt: NodeJS.Timeout; key: LayoutKey } | null = null;
 
@@ -137,7 +143,20 @@ export function createWidgetWindow(store: Store, options: { mode: WidgetMode; al
   return {
     window,
     setMode(mode) {
-      fitTo(layoutKeyFor(mode, store.loadPreferences().compactLayout));
+      const key = layoutKeyFor(mode, store.loadPreferences().compactLayout);
+      if (mode === currentMode) return fitTo(key);
+      const [x = 0, y = 0] = window.getPosition();
+      if (mode === "expanded") {
+        placement = rememberBeforeExpand({ x, y });
+        fitTo(key);
+        const [px = 0, py = 0] = window.getPosition();
+        placement = rememberAfterExpand(placement, { x: px, y: py });
+      } else {
+        const origin = originOnCollapse({ x, y }, placement);
+        placement = EMPTY_PLACEMENT;
+        fitTo(key, origin);
+      }
+      currentMode = mode;
     },
     applyLayout() {
       const prefs = store.loadPreferences();
