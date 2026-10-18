@@ -9,11 +9,13 @@ import { Button } from "../ui/Button";
 import { NoticeBanner } from "../ui/Feedback";
 import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
+import { ImportView } from "../import/ImportView";
 import { SettingsPanel } from "./SettingsPanel";
 import { SubscriptionForm } from "./SubscriptionForm";
 import { SubscriptionRow } from "./SubscriptionRow";
 
 type Filter = "all" | SubscriptionStatus;
+type View = "subscriptions" | "import";
 type Editing = { kind: "add" } | { kind: "edit"; subscription: Subscription } | null;
 
 /** Expanded management window: totals, full list, add / edit / delete, and settings. */
@@ -22,6 +24,7 @@ export function ManagerView() {
   const today = useToday();
   const [filter, setFilter] = useState<Filter>("all");
   const [editing, setEditing] = useState<Editing>(null);
+  const [view, setView] = useState<View>("subscriptions");
 
   const totals = useMemo(() => totalsByCurrency(subscriptions), [subscriptions]);
   const counts = useMemo(() => {
@@ -71,48 +74,67 @@ export function ManagerView() {
         </aside>
 
         <main className="flex min-w-0 flex-1 flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <div role="tablist" aria-label="Filter by status" className="flex flex-1 gap-1 rounded-xl bg-white/[0.05] p-1">
-              {(["all", ...SUBSCRIPTION_STATUSES] as Filter[]).map((f) => (
-                <button
-                  key={f}
-                  type="button"
-                  role="tab"
-                  aria-selected={filter === f}
-                  onClick={() => setFilter(f)}
-                  className={`rounded-lg px-3 py-1 text-xs font-medium transition ${filter === f ? "bg-white/15 text-white" : "text-white/55 hover:text-white"}`}
-                >
-                  {f === "all" ? "All" : STATUS_LABEL[f]} <span className="text-white/40">{counts[f]}</span>
-                </button>
-              ))}
-            </div>
-            <Button variant="primary" onClick={() => setEditing({ kind: "add" })}>
-              <Icon name="plus" size={14} className="mr-1 inline -translate-y-px" />Add
-            </Button>
+          <div role="tablist" aria-label="Section" className="flex w-fit gap-1 rounded-xl bg-white/[0.05] p-1">
+            {([["subscriptions", "Subscriptions"], ["import", "Import CSV"]] as const).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={view === id}
+                onClick={() => setView(id)}
+                className={`rounded-lg px-3 py-1 text-xs font-medium transition ${view === id ? "bg-white/15 text-white" : "text-white/55 hover:text-white"}`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
-
           {notice && <NoticeBanner message={notice} onDismiss={dismissNotice} />}
-
-          {visible.length === 0 ? (
-            <div className="grid flex-1 place-items-center text-center">
-              <div>
-                <p className="font-medium">{subscriptions.length === 0 ? "No subscriptions yet" : `No ${filter} subscriptions`}</p>
-                <p className="mt-1 text-sm text-white/50">{subscriptions.length === 0 ? "Add your first one to see your spending." : "Try a different filter."}</p>
-              </div>
-            </div>
+          {view === "import" ? (
+            <ImportView />
           ) : (
-            <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
-              {visible.map((sub, i) => (
-                <SubscriptionRow
-                  key={sub.id}
-                  index={i}
-                  subscription={sub}
-                  today={today}
-                  onEdit={() => setEditing({ kind: "edit", subscription: sub })}
-                  onDelete={() => removeSubscription(sub.id).catch(reportError)}
-                />
-              ))}
-            </ul>
+            <>
+            <div className="flex items-center gap-3">
+              <div role="tablist" aria-label="Filter by status" className="flex flex-1 gap-1 rounded-xl bg-white/[0.05] p-1">
+                {(["all", ...SUBSCRIPTION_STATUSES] as Filter[]).map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    role="tab"
+                    aria-selected={filter === f}
+                    onClick={() => setFilter(f)}
+                    className={`rounded-lg px-3 py-1 text-xs font-medium transition ${filter === f ? "bg-white/15 text-white" : "text-white/55 hover:text-white"}`}
+                  >
+                    {f === "all" ? "All" : STATUS_LABEL[f]} <span className="text-white/40">{counts[f]}</span>
+                  </button>
+                ))}
+              </div>
+              <Button variant="primary" onClick={() => setEditing({ kind: "add" })}>
+                <Icon name="plus" size={14} className="mr-1 inline -translate-y-px" />Add
+              </Button>
+            </div>
+
+            {visible.length === 0 ? (
+              <div className="grid flex-1 place-items-center text-center">
+                <div>
+                  <p className="font-medium">{subscriptions.length === 0 ? "No subscriptions yet" : `No ${filter} subscriptions`}</p>
+                  <p className="mt-1 text-sm text-white/50">{subscriptions.length === 0 ? "Add your first one to see your spending." : "Try a different filter."}</p>
+                </div>
+              </div>
+            ) : (
+              <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+                {visible.map((sub, i) => (
+                  <SubscriptionRow
+                    key={sub.id}
+                    index={i}
+                    subscription={sub}
+                    today={today}
+                    onEdit={() => setEditing({ kind: "edit", subscription: sub })}
+                    onDelete={() => removeSubscription(sub.id).catch(reportError)}
+                  />
+                ))}
+              </ul>
+            )}
+            </>
           )}
         </main>
       </div>

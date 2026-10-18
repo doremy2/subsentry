@@ -16,6 +16,17 @@ export function App() {
     document.documentElement.style.setProperty("--surface-alpha", String(preferences.opacity));
   }, [preferences.accent, preferences.opacity]);
 
+  // A file dropped outside the drop zone must never navigate the window to that file.
+  useEffect(() => {
+    const block = (e: DragEvent) => e.preventDefault();
+    window.addEventListener("dragover", block);
+    window.addEventListener("drop", block);
+    return () => {
+      window.removeEventListener("dragover", block);
+      window.removeEventListener("drop", block);
+    };
+  }, []);
+
   return (
     <div className="h-full" style={{ padding: SHADOW_MARGIN }}>
       {status === "ready" ? (

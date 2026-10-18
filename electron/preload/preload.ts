@@ -32,6 +32,7 @@ const api: SubSentryApi = {
   },
   app: { quit: () => call(CHANNELS.appQuit) },
   system: { showTestNotification: () => call(CHANNELS.systemTestNotification) },
+  detection: { analyze: (transactions) => call(CHANNELS.detectionAnalyze, transactions) },
 };
 
 contextBridge.exposeInMainWorld("subsentry", api);
