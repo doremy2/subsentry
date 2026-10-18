@@ -33,11 +33,8 @@ export function decodePreferences(rows: PreferenceRows): Preferences {
   const mode = raw.get("mode");
   if (mode === "compact" || mode === "expanded") prefs.mode = mode;
 
-  const pos = raw.get("windowPosition");
-  if (pos && typeof pos === "object") {
-    const { x, y } = pos as Record<string, unknown>;
-    if (Number.isFinite(x) && Number.isFinite(y)) prefs.windowPosition = { x: x as number, y: y as number };
-  }
+  const launchOnLogin = raw.get("launchOnLogin");
+  if (typeof launchOnLogin === "boolean") prefs.launchOnLogin = launchOnLogin;
 
   return prefs;
 }
@@ -46,4 +43,22 @@ export function encodePreferencePatch(patch: Partial<Preferences>): Array<{ key:
   return Object.entries(patch)
     .filter(([, value]) => value !== undefined)
     .map(([key, value]) => ({ key, value: JSON.stringify(value) }));
+}
+
+/**
+ * Whitelist and type-check a preference patch from an untrusted source (the
+ * renderer over IPC). Unknown keys and bad values are dropped.
+ */
+export function sanitizePreferencePatch(input: unknown): Partial<Preferences> {
+  if (!input || typeof input !== "object") return {};
+  const raw = input as Record<string, unknown>;
+  const patch: Partial<Preferences> = {};
+  if (typeof raw["accent"] === "string" && (ACCENTS as readonly string[]).includes(raw["accent"])) patch.accent = raw["accent"] as Preferences["accent"];
+  if (typeof raw["opacity"] === "number" && Number.isFinite(raw["opacity"])) {
+    patch.opacity = Math.min(OPACITY_RANGE.max, Math.max(OPACITY_RANGE.min, raw["opacity"]));
+  }
+  if (typeof raw["alwaysOnTop"] === "boolean") patch.alwaysOnTop = raw["alwaysOnTop"];
+  if (raw["mode"] === "compact" || raw["mode"] === "expanded") patch.mode = raw["mode"];
+  if (typeof raw["launchOnLogin"] === "boolean") patch.launchOnLogin = raw["launchOnLogin"];
+  return patch;
 }

@@ -21,7 +21,7 @@ export function App() {
       {status === "ready" ? (
         preferences.mode === "expanded" ? <ManagerView key="expanded" /> : <CompactWidget key="compact" />
       ) : (
-        <div data-tauri-drag-region className="card grid h-full place-items-center rounded-[28px]">
+        <div data-drag className="card grid h-full place-items-center rounded-[28px]">
           {status === "error" ? <ErrorState message={fatalError ?? "Unknown error."} onRetry={retry} /> : <Spinner />}
         </div>
       )}

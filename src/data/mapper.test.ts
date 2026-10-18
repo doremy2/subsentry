@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodePreferences } from "./preferencesCodec";
-import { rowToSubscription } from "./sqlite/subscriptionMapper";
+import { decodePreferences, sanitizePreferencePatch } from "./preferencesCodec";
 import { createMemoryServices } from "./memory/memoryServices";
 
 describe("decodePreferences", () => {
@@ -16,12 +15,14 @@ describe("decodePreferences", () => {
   });
 });
 
-describe("rowToSubscription", () => {
-  const row = { id: "a", merchant: "X", price_minor: 100, currency: "USD", interval: "monthly", next_renewal: "2025-01-01", status: "active", created_at: "t", updated_at: "t" };
-  it("maps a valid row", () => expect(rowToSubscription(row).priceMinor).toBe(100));
-  it("rejects corrupt rows", () => {
-    expect(() => rowToSubscription({ ...row, interval: "daily" })).toThrow();
-    expect(() => rowToSubscription({ ...row, price_minor: "1" })).toThrow();
+describe("sanitizePreferencePatch", () => {
+  it("keeps valid keys, clamps, and drops junk", () => {
+    expect(sanitizePreferencePatch({ opacity: 0, accent: "teal", evil: 1, mode: "huge", launchOnLogin: true })).toEqual({
+      opacity: 0.4,
+      accent: "teal",
+      launchOnLogin: true,
+    });
+    expect(sanitizePreferencePatch(null)).toEqual({});
   });
 });
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { createDataServices, DEFAULT_PREFERENCES, type DataServices, type Preferences, type WidgetMode } from "../data";
+import { createDataServices, DEFAULT_PREFERENCES, type DataServices, type WidgetMode } from "../data";
 import { createWindowService, type WindowService } from "../desktop/windowService";
-import type { Subscription, SubscriptionInput } from "../domain/subscription";
+import type { Subscription } from "../domain/subscription";
 import { AppContext, type AppActions, type AppState } from "./appContext";
 
 interface Runtime {
@@ -9,14 +9,11 @@ interface Runtime {
   win: WindowService;
 }
 
-/** Created once per page load, so concurrent mounts can never open/seed the database twice. */
-let runtimePromise: Promise<Runtime> | null = null;
-function getRuntime(): Promise<Runtime> {
-  runtimePromise ??= (async () => {
-    const [data, win] = await Promise.all([createDataServices(), createWindowService()]);
-    return { data, win };
-  })();
-  return runtimePromise;
+/** Created once per page load. */
+let runtime: Runtime | null = null;
+function getRuntime(): Runtime {
+  runtime ??= { data: createDataServices(), win: createWindowService() };
+  return runtime;
 }
 
 export function describeError(error: unknown): string {
@@ -34,43 +31,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     notice: null,
   });
   const [attempt, setAttempt] = useState(0);
-  const runtime = useRef<Runtime | null>(null);
+  const runtimeRef = useRef<Runtime | null>(null);
 
-  // Startup: load data, restore window state, then reveal the (initially hidden) window.
+  // Startup: load data, then subscribe to preference changes made from the tray menu.
   useEffect(() => {
     let cancelled = false;
-    let stopWatchingMoves: (() => void) | undefined;
     setState((s) => ({ ...s, status: "loading", fatalError: null }));
+    const rt = getRuntime();
+    runtimeRef.current = rt;
 
-    (async () => {
-      let win: WindowService | null = null;
-      try {
-        runtimePromise = attempt === 0 ? runtimePromise : null; // a retry re-opens everything
-        const rt = await getRuntime();
-        win = rt.win;
-        runtime.current = rt;
-        const [preferences, subscriptions] = await Promise.all([rt.data.preferences.load(), rt.data.subscriptions.list()]);
-        if (cancelled) return;
+    const stopWatching = rt.win.onPreferencesChanged((preferences) => setState((s) => ({ ...s, preferences })));
 
-        await rt.win.restorePosition(preferences.windowPosition);
-        await rt.win.applyMode(preferences.mode);
-        await rt.win.setAlwaysOnTop(preferences.alwaysOnTop);
-        stopWatchingMoves = await rt.win.onMoved((windowPosition) => {
-          void rt.data.preferences.save({ windowPosition }).catch(() => {});
-        });
-
-        setState((s) => ({ ...s, status: "ready", preferences, subscriptions }));
-      } catch (error) {
+    Promise.all([rt.data.preferences.load(), rt.data.subscriptions.list()])
+      .then(([preferences, subscriptions]) => {
+        if (!cancelled) setState((s) => ({ ...s, status: "ready", preferences, subscriptions }));
+      })
+      .catch((error: unknown) => {
         if (!cancelled) setState((s) => ({ ...s, status: "error", fatalError: describeError(error) }));
-      } finally {
-        // Always reveal the window, even on failure, so the user can see the error.
-        await win?.show().catch(() => {});
-      }
-    })();
+      });
 
     return () => {
       cancelled = true;
-      stopWatchingMoves?.();
+      stopWatching();
     };
   }, [attempt]);
 
@@ -78,8 +60,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const actions = useMemo<AppActions>(() => {
     const rt = () => {
-      if (!runtime.current) throw new Error("The app is still starting up.");
-      return runtime.current;
+      if (!runtimeRef.current) throw new Error("The app is still starting up.");
+      return runtimeRef.current;
     };
 
     return {
@@ -96,19 +78,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setState((s) => ({ ...s, subscriptions: s.subscriptions.filter((x) => x.id !== id) }));
       },
       async updatePreferences(patch) {
-        const { data, win } = rt();
+        const { data } = rt();
         setState((s) => ({ ...s, preferences: { ...s.preferences, ...patch } })); // optimistic: sliders must feel instant
-        if (patch.alwaysOnTop !== undefined) await win.setAlwaysOnTop(patch.alwaysOnTop);
-        await data.preferences.save(patch);
+        await data.preferences.save(patch); // the main process applies always-on-top / login item
       },
       async setMode(mode: WidgetMode) {
-        const { data, win } = rt();
-        await win.applyMode(mode);
+        await rt().win.setMode(mode); // main resizes the window and persists the mode
         setState((s) => ({ ...s, preferences: { ...s.preferences, mode } }));
-        await data.preferences.save({ mode });
       },
       hideWindow: () => rt().win.hide(),
       quit: () => rt().win.quit(),
+      showTestNotification: () => rt().win.showTestNotification(),
+      platform: getRuntime().win.platform,
       reportError,
       dismissNotice: () => setState((s) => ({ ...s, notice: null })),
       retry: () => setAttempt((n) => n + 1),
@@ -119,4 +100,3 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
-export type { Preferences, SubscriptionInput };

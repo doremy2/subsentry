@@ -7,7 +7,8 @@ const SWATCH: Record<Accent, string> = { indigo: "#8b8cff", teal: "#4fd1c5", ros
 
 /** Appearance and window preferences. Every control here is persisted. */
 export function SettingsPanel() {
-  const { preferences, updatePreferences, reportError, hideWindow, quit } = useApp();
+  const { preferences, updatePreferences, reportError, hideWindow, quit, showTestNotification, platform } = useApp();
+  const trayName = platform === "darwin" ? "menu bar" : "tray";
   const update = (patch: Parameters<typeof updatePreferences>[0]) => void updatePreferences(patch).catch(reportError);
 
   return (
@@ -62,9 +63,27 @@ export function SettingsPanel() {
         />
       </label>
 
+      <label className="flex cursor-pointer items-center justify-between gap-3">
+        <span>
+          <span className="block text-sm">Launch at login</span>
+          <span className="block text-xs text-white/45">Start SubSentry when you sign in</span>
+        </span>
+        <input
+          type="checkbox"
+          role="switch"
+          checked={preferences.launchOnLogin}
+          onChange={(e) => update({ launchOnLogin: e.target.checked })}
+          className="size-4 accent-[var(--accent)]"
+        />
+      </label>
+
+      <Button className="w-full !py-1.5 text-xs" onClick={() => void showTestNotification().catch(reportError)}>
+        Send test notification
+      </Button>
+
       <div className="flex gap-2 pt-1">
         <Button className="flex-1 !px-2 text-xs" onClick={() => void hideWindow().catch(reportError)}>
-          <Icon name="hide" size={14} className="mr-1 inline" />Hide to tray
+          <Icon name="hide" size={14} className="mr-1 inline" />Hide to {trayName}
         </Button>
         <Button variant="ghost" className="flex-1 !px-2 text-xs" onClick={() => void quit().catch(reportError)}>
           <Icon name="power" size={14} className="mr-1 inline" />Quit

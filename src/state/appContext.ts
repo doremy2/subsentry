@@ -23,6 +23,9 @@ export interface AppActions {
   setMode(mode: WidgetMode): Promise<void>;
   hideWindow(): Promise<void>;
   quit(): Promise<void>;
+  showTestNotification(): Promise<void>;
+  /** "darwin" | "win32" | "linux" in Electron, "web" in a browser preview. */
+  platform: string;
   reportError(error: unknown): void;
   dismissNotice(): void;
   retry(): void;

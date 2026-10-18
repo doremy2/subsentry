@@ -1,21 +1,24 @@
 # AGENTS.md - shared conventions (Claude Code and Codex)
 
-SubSentry: Tauri 2 desktop widget (React + TypeScript + Tailwind 4, SQLite). Windows first, keep macOS possible.
+SubSentry: one Electron + React + TypeScript app for Windows and macOS. No Rust/Tauri. JavaScript/TypeScript is the primary language (Python only as an optional, non-required detection sidecar). Read `docs/ARCHITECTURE.md` first.
 
-## Layout and boundaries
-- `src/domain/`: pure logic and types. No I/O, no React, no Tauri. Fully unit-tested.
-- `src/data/`: repository interfaces (`types.ts`), SQLite and in-memory implementations. Only place SQL lives.
-- `src/desktop/`: native window access behind `WindowService`. Only place `@tauri-apps/api/window` is imported.
-- `src/state/`: React context wiring data + desktop to the UI.
-- `src/components/`: UI only; talks to `useApp()`, never to SQL or Tauri.
-- `src-tauri/`: Rust shell (window config, tray, migrations, capabilities). Backend logic and integrations go here or in new modules behind a repository interface.
+## Ownership (to avoid conflicts)
+| Area | Owner | Paths |
+|---|---|---|
+| UI, desktop shell, platform layer | Claude Code side | `src/components`, `src/state`, `src/desktop`, `src/styles`, `electron/main/{window,tray,platform,index}.ts`, `electron/preload` |
+| Data, backend logic, detection | Codex side | `electron/main/db/`, `electron/main/detection/` (new), `electron/main/reminders/` (new) |
+| Shared contracts (change via small PR, tell the other dev) | both | `src/domain`, `src/data/types.ts`, `electron/shared/api.ts`, `docs/DATA_MODEL.md` |
 
 ## Rules
-- TypeScript strict; no `any`. Money is integer minor units. Dates are `YYYY-MM-DD` strings.
-- Add or change billing/validation logic together with tests (`*.test.ts`, Vitest).
-- Schema changes: new migration version in `src-tauri/src/migrations.rs` + update `docs/DATA_MODEL.md`.
-- New Tauri permissions go in `src-tauri/capabilities/default.json`, minimal.
-- Avoid new dependencies unless clearly needed. No secrets in the repo.
-- Checks before PR: `npm run typecheck`, `npm test`, `npm run build`, and `cargo check` in `src-tauri/`.
-- Out of scope for Milestone 1: bank integration, automatic transaction detection (partner's track).
-- Branching: see `docs/BRANCHING.md`.
+- TypeScript strict, no `any`. Money = integer minor units. Dates = `YYYY-MM-DD` strings.
+- `src/domain` is pure (no React/Electron/Node). Billing/validation changes ship with Vitest tests.
+- The renderer never touches Node or SQLite; it only uses `window.subsentry` through `src/data` and `src/desktop`.
+- Anything coming over IPC is untrusted: validate in main (`parseSubscriptionInput`, `sanitizePreferencePatch`).
+- OS differences go in `electron/main/platform.ts` only; no scattered `process.platform` checks.
+- Schema changes: append a migration to `electron/main/db/database.ts` (never edit shipped ones), update `docs/DATA_MODEL.md`, add a store test.
+- The main process bundles its npm deps (packaged app has no `node_modules`). Avoid native modules; avoid new dependencies unless clearly needed.
+- New cross-boundary feature: channel + type in `electron/shared/api.ts`, handler in `ipc.ts`, bridge in `preload.ts`.
+- No secrets in the repo. Signing credentials only as GitHub secrets (see `docs/DISTRIBUTION.md`).
+- Before a PR: `npm run typecheck && npm test`; for window/packaging changes also run `npm start` and `npm run package` on your OS.
+- Never create a second app or fork the codebase per OS. Wallpaper-layer embedding is out of scope.
+- Branching: `docs/BRANCHING.md`.

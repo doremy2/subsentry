@@ -74,3 +74,21 @@ export function validateSubscriptionDraft(draft: SubscriptionDraft): ValidationR
     },
   };
 }
+
+/**
+ * Strict check of an already-typed subscription from an untrusted source
+ * (the renderer over IPC). Returns the normalised value or null.
+ */
+export function parseSubscriptionInput(value: unknown): SubscriptionInput | null {
+  if (!value || typeof value !== "object") return null;
+  const v = value as Record<string, unknown>;
+  const { merchant, priceMinor, currency, interval, nextRenewal, status } = v;
+  if (typeof merchant !== "string" || typeof currency !== "string" || typeof interval !== "string") return null;
+  if (typeof nextRenewal !== "string" || typeof status !== "string" || typeof priceMinor !== "number") return null;
+  const name = merchant.trim().replace(/\s+/g, " ");
+  if (!name || name.length > MERCHANT_MAX_LENGTH) return null;
+  if (!includes(SUPPORTED_CURRENCIES, currency)) return null;
+  if (!Number.isSafeInteger(priceMinor) || priceMinor <= 0 || priceMinor > PRICE_MAX_MAJOR * 10 ** minorUnitDigits(currency)) return null;
+  if (!includes(BILLING_INTERVALS, interval) || !includes(SUBSCRIPTION_STATUSES, status) || !isValidISODate(nextRenewal)) return null;
+  return { merchant: name, priceMinor, currency, interval, nextRenewal, status };
+}

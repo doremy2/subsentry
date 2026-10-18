@@ -86,3 +86,10 @@ textarea { user-select: text; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Frameless-window dragging (Electron). Interactive children must opt out. */
+[data-drag] { -webkit-app-region: drag; }
+[data-drag] button,
+[data-drag] input,
+[data-drag] select,
+[data-drag] a { -webkit-app-region: no-drag; }

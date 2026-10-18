@@ -24,19 +24,14 @@ export type Accent = (typeof ACCENTS)[number];
 
 export type WidgetMode = "compact" | "expanded";
 
-export interface WindowPosition {
-  x: number;
-  y: number;
-}
-
 export interface Preferences {
   accent: Accent;
   /** Surface opacity, 0.4 (see-through) to 1 (solid). */
   opacity: number;
   alwaysOnTop: boolean;
   mode: WidgetMode;
-  /** Last widget position in physical pixels, or null before the first move. */
-  windowPosition: WindowPosition | null;
+  /** Start SubSentry when the user logs in (applied through the OS login-item API). */
+  launchOnLogin: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -44,7 +39,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   opacity: 0.82,
   alwaysOnTop: false,
   mode: "compact",
-  windowPosition: null,
+  launchOnLogin: false,
 };
 
 export const OPACITY_RANGE = { min: 0.4, max: 1 } as const;

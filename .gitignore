@@ -5,7 +5,11 @@ dist/
 !.env.example
 *.db
 *.db-journal
-src-tauri/target/
-src-tauri/gen/
+*.db-wal
+*.db-shm
 *.log
 .DS_Store
+.vite/
+out/
+.vite/
+out/

@@ -1,6 +1,8 @@
 # Data model
 
-Source of truth: `src/domain/subscription.ts` (TypeScript) and `src-tauri/src/migrations.rs` (SQLite). Keep all three in sync.
+Source of truth: `src/domain/subscription.ts` (TypeScript) and `electron/main/db/database.ts` (SQLite migrations). Keep them and this doc in sync.
+
+Storage: `subsentry.db` in Electron's `userData` folder, opened by the main process with `node:sqlite` (WAL mode). Schema version = `PRAGMA user_version`.
 
 ## Subscription
 
@@ -18,10 +20,11 @@ Source of truth: `src/domain/subscription.ts` (TypeScript) and `src-tauri/src/mi
 ## Preferences
 
 Key/value table: `preferences(key TEXT PRIMARY KEY, value TEXT)`, values are JSON.
-Keys: `accent`, `opacity` (0.4-1), `alwaysOnTop`, `mode` (`compact|expanded`), `windowPosition` (`{x,y}` physical px), `seeded` (demo data inserted once).
-Decoding is defensive (`src/data/preferencesCodec.ts`): bad values fall back to defaults.
+Keys: `accent`, `opacity` (0.4-1), `alwaysOnTop`, `mode` (`compact|expanded`), `launchOnLogin`, `seeded` (demo data inserted once), `windowPositions` (`{ [deviceId]: {x,y} }` in screen DIPs; `deviceId` = hash of host + user + OS, so positions never leak between machines).
+Decoding is defensive (`src/data/preferencesCodec.ts`): bad values fall back to defaults. Patches from the renderer are whitelisted with `sanitizePreferencePatch`.
 
 ## Rules
 - Totals are per currency; there is no FX conversion.
 - Monthly equivalent = price x periods per year / 12 (weekly uses 52).
-- Schema changes: append a new migration version; never edit a shipped one.
+- Schema changes: append a new migration to `MIGRATIONS`; never edit a shipped one.
+- The main process re-validates every subscription with `parseSubscriptionInput`.

@@ -35,14 +35,14 @@ export function ManagerView() {
 
   return (
     <div className="card animate-fade-in relative flex h-full flex-col overflow-hidden rounded-[28px]">
-      <header data-tauri-drag-region className="flex items-center gap-2 px-6 pt-4 pb-2">
-        <span data-tauri-drag-region className="pointer-events-none flex flex-1 items-center gap-2 text-sm font-semibold tracking-wide">
+      <header data-drag className="flex items-center gap-2 px-6 pt-4 pb-2">
+        <span data-drag className="pointer-events-none flex flex-1 items-center gap-2 text-sm font-semibold tracking-wide">
           <span className="text-accent"><Icon name="logo" size={20} /></span>
           SubSentry
           <span className="font-normal text-white/40">/ Manage</span>
         </span>
         <IconButton icon="collapse" label="Back to widget" onClick={() => void setMode("compact").catch(reportError)} />
-        <IconButton icon="hide" label="Hide to tray" onClick={() => void hideWindow().catch(reportError)} />
+        <IconButton icon="hide" label="Hide (stays in tray / menu bar)" onClick={() => void hideWindow().catch(reportError)} />
       </header>
 
       <div className="flex min-h-0 flex-1 gap-5 px-6 pb-6 pt-2">

@@ -31,16 +31,16 @@ export function CompactWidget() {
   return (
     <div className="card animate-fade-in flex h-full flex-col overflow-hidden rounded-[28px]">
       {/* Drag handle: children ignore the pointer so the whole strip drags. */}
-      <header data-tauri-drag-region className="flex items-center gap-2 px-5 pt-4 pb-1">
-        <span data-tauri-drag-region className="pointer-events-none flex flex-1 items-center gap-2 text-sm font-semibold tracking-wide">
+      <header data-drag className="flex items-center gap-2 px-5 pt-4 pb-1">
+        <span data-drag className="pointer-events-none flex flex-1 items-center gap-2 text-sm font-semibold tracking-wide">
           <span className="text-accent"><Icon name="logo" size={20} /></span>
           SubSentry
         </span>
         <IconButton icon="expand" label="Open manager" onClick={expand} />
-        <IconButton icon="hide" label="Hide to tray" onClick={() => void hideWindow().catch(reportError)} />
+        <IconButton icon="hide" label="Hide (stays in tray / menu bar)" onClick={() => void hideWindow().catch(reportError)} />
       </header>
 
-      <section data-tauri-drag-region className="px-5 pt-3 pb-4">
+      <section data-drag className="px-5 pt-3 pb-4">
         <p className="pointer-events-none text-xs font-medium uppercase tracking-[0.14em] text-white/45">Monthly spend</p>
         <p className="pointer-events-none mt-1 text-[44px] leading-none font-semibold tracking-tight tabular-nums">
           {primary ? formatMoney(Math.round(primary.monthlyMinor), primary.currency) : "—"}

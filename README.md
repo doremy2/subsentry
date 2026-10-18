@@ -1,41 +1,50 @@
 # SubSentry
 
-Desktop subscription watchdog: a compact, draggable widget showing monthly spend and upcoming renewals, with an expanded view to add, edit and delete subscriptions. Local SQLite storage. Tauri 2 + React + TypeScript + Tailwind.
+A polished desktop widget that watches your subscriptions: monthly spend and upcoming renewals at a glance, with an expanded manager to add, edit and delete them. **One Electron codebase for Windows 10/11 and macOS.** Data stays local in SQLite.
 
-## Prerequisites (Windows)
-1. [Node.js](https://nodejs.org) 20+ (LTS)
-2. [Rust](https://rustup.rs) (stable, MSVC toolchain)
-3. Visual Studio Build Tools with "Desktop development with C++"
-4. WebView2 runtime (preinstalled on Windows 10/11)
+Stack: Electron + Electron Forge, React + TypeScript, Tailwind CSS 4, Node `node:sqlite`, Vitest. Optional Python for detection later.
 
-See the official [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
+## Prerequisites
+- **Node.js 22+** (LTS) and npm. That's it: no Rust, no native compilers (SQLite is built into Electron's Node).
+- macOS: nothing extra. Windows: nothing extra.
 
-## Run
+## Run (macOS or Windows)
 ```bash
 npm install
-npm run tauri dev      # real desktop app (first Rust build takes a few minutes)
-npm run dev            # browser-only UI preview with in-memory demo data
+npm start                 # launches the real desktop widget with hot reload
 ```
+`npm run preview:web` serves only the UI in a browser with in-memory demo data (no window/tray/SQLite).
 
-## Test and build
+## Test, build, package
 ```bash
 npm run typecheck
-npm test
-npm run build          # frontend
-npm run tauri build    # installer in src-tauri/target/release/bundle
+npm test                  # domain logic + SQLite store tests
+npm run package           # unpacked app in out/
+npm run make              # installer for the current OS in out/make/
 ```
+macOS produces `.app` + `.dmg` (+ zip); Windows produces `SubSentry-Setup.exe` (+ zip). CI builds both on separate runners; see [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md) for signing and notarization.
 
 ## Using it
-- Drag the widget by its header or the spend area. Position is remembered.
-- Expand button / "Manage subscriptions" opens the manager; the collapse button returns.
-- Hide sends it to the system tray; click the tray icon to bring it back. Closing the window also hides it. Quit from the tray menu or Settings.
-- Settings (in the manager): accent color, transparency, always-on-top.
-- Demo data is inserted on first launch. Delete `subsentry.db` in the app data folder to reset.
+- Drag the widget by its header or spend area; position is remembered per device.
+- "Manage subscriptions" expands it; the collapse button returns to compact.
+- Hide sends it to the tray (Windows) / menu bar (macOS). Click the icon to toggle, right-click for the menu (Show/Hide, Always on top, Quit). Closing the window also just hides it.
+- Settings (in the manager): accent color, transparency, always on top, launch at login (packaged builds only), test notification.
+- Demo data is inserted on first launch only. Database location: Electron's `userData` folder (`~/Library/Application Support/SubSentry` or `%APPDATA%\SubSentry`), file `subsentry.db`.
+
+## Project layout
+```
+electron/main/      main process: window, tray, platform layer, IPC, SQLite (db/)
+electron/preload/   the only bridge exposed to the UI (window.subsentry)
+electron/shared/    IPC contract + window sizes (used by main, preload, renderer)
+src/domain/         pure logic: model, billing, dates, money, validation (+ tests)
+src/data/           data-service interface, IPC and in-memory implementations
+src/state/ src/desktop/ src/components/   React UI
+assets/             app icons, tray icons
+docs/               architecture, data model, branching, roadmap, distribution
+```
 
 ## Docs
-- [AGENTS.md](AGENTS.md): conventions and module boundaries
-- [docs/DATA_MODEL.md](docs/DATA_MODEL.md)
-- [docs/BRANCHING.md](docs/BRANCHING.md)
+[Architecture](docs/ARCHITECTURE.md) · [Data model](docs/DATA_MODEL.md) · [Roadmap](docs/ROADMAP.md) · [Branching](docs/BRANCHING.md) · [Distribution & signing](docs/DISTRIBUTION.md) · [AGENTS.md](AGENTS.md)
 
 ## Known limits
-Transparency works on Windows; Mica/blur, true wallpaper-layer embedding, notifications and autostart are planned for later milestones.
+Transparency works on both OSes; blur/vibrancy, wallpaper-layer embedding, reminders (Milestone 3), CSV detection (Milestone 4) and auto-update are not built yet. The earlier Tauri prototype is preserved at git tag `tauri-prototype`.

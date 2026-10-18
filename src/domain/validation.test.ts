@@ -65,3 +65,20 @@ describe("validateSubscriptionDraft", () => {
     expect(validateSubscriptionDraft({ ...valid, merchant: "x".repeat(61) }).ok).toBe(false);
   });
 });
+
+import { parseSubscriptionInput } from "./validation";
+
+describe("parseSubscriptionInput", () => {
+  const ok = { merchant: " Netflix ", priceMinor: 1549, currency: "USD", interval: "monthly", nextRenewal: "2025-07-01", status: "active" };
+  it("accepts and normalises valid input", () => {
+    expect(parseSubscriptionInput(ok)?.merchant).toBe("Netflix");
+  });
+  it("rejects malformed input from an untrusted caller", () => {
+    expect(parseSubscriptionInput(null)).toBeNull();
+    expect(parseSubscriptionInput({ ...ok, priceMinor: 1.5 })).toBeNull();
+    expect(parseSubscriptionInput({ ...ok, priceMinor: -1 })).toBeNull();
+    expect(parseSubscriptionInput({ ...ok, interval: "daily" })).toBeNull();
+    expect(parseSubscriptionInput({ ...ok, nextRenewal: "2025-02-30" })).toBeNull();
+    expect(parseSubscriptionInput({ ...ok, merchant: "" })).toBeNull();
+  });
+});
