@@ -1,6 +1,9 @@
 import { ipcMain, type IpcMainInvokeEvent, type WebContents } from "electron";
 import { sanitizePreferencePatch } from "../../src/data/preferencesCodec";
 import type { Preferences, WidgetMode } from "../../src/data/types";
+import { todayISO } from "../../src/domain/dates";
+import { runDetection } from "../../src/domain/detection/run";
+import type { SubscriptionDetector } from "../../src/domain/detection/types";
 import { parseSubscriptionInput } from "../../src/domain/validation";
 import { CHANNELS, type IpcResult } from "../shared/api";
 import type { Store } from "./db/store";
@@ -17,14 +20,16 @@ export interface IpcDependencies {
   showTestNotification(): void;
   /** Subscriptions or settings changed: lets the reminder scheduler re-check immediately. */
   onDataChanged(): void;
+  /** Which detector analyzes imported transactions (mock in development). */
+  detector: SubscriptionDetector;
 }
 
 /** Register a handler that rejects untrusted senders and returns errors as data. */
-function handle<T>(channel: string, deps: IpcDependencies, fn: (...args: unknown[]) => T): void {
-  ipcMain.handle(channel, (event: IpcMainInvokeEvent, ...args: unknown[]): IpcResult<T> => {
+function handle<T>(channel: string, deps: IpcDependencies, fn: (...args: unknown[]) => T | Promise<T>): void {
+  ipcMain.handle(channel, async (event: IpcMainInvokeEvent, ...args: unknown[]): Promise<IpcResult<T>> => {
     if (event.sender !== deps.trustedSender()) return { ok: false, error: "Untrusted caller." };
     try {
-      return { ok: true, value: fn(...args) };
+      return { ok: true, value: await fn(...args) };
     } catch (error) {
       return { ok: false, error: error instanceof Error ? error.message : "Unexpected error." };
     }
@@ -70,4 +75,11 @@ export function registerIpc(deps: IpcDependencies): void {
   handle(CHANNELS.windowHide, deps, () => deps.hideWindow());
   handle(CHANNELS.appQuit, deps, () => deps.quit());
   handle(CHANNELS.systemTestNotification, deps, () => deps.showTestNotification());
+
+  // CSV transaction analysis: validated, local-only, nothing stored. Suggestions are only
+  // suggestions; saving one goes through the normal (validated) subscriptions:create channel
+  // after the user confirms in the UI.
+  handle(CHANNELS.detectionAnalyze, deps, (transactions) =>
+    runDetection(deps.detector, transactions, { existingSubscriptions: store.listSubscriptions(), today: todayISO() }),
+  );
 }

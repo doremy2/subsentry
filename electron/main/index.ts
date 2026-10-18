@@ -5,6 +5,7 @@ import type { Preferences } from "../../src/data/types";
 import { CHANNELS } from "../shared/api";
 import { openDatabase } from "./db/database";
 import { createStore } from "./db/store";
+import { selectDetector, shouldUseMockDetection } from "./detection";
 import { registerIpc } from "./ipc";
 import { createReminderScheduler, type ReminderScheduler } from "./reminders/scheduler";
 import { applyAlwaysOnTop, isMac, isWindows, setLaunchOnLogin, showNotification } from "./platform";
@@ -86,6 +87,7 @@ void app.whenReady().then(() => {
     applyPreferences,
     showTestNotification: () => void showNotification("SubSentry", "Notifications are working. You will be reminded before renewals.", () => widget?.show()),
     onDataChanged: () => reminders?.checkNow(),
+    detector: selectDetector(shouldUseMockDetection(app.isPackaged, process.env)),
   });
 
   // macOS: clicking the Dock icon should bring the widget back.

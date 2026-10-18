@@ -21,6 +21,8 @@ export default tseslint.config(
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "error", // AGENTS.md: no `any`
+      // CSV parsing intentionally matches BOM / non-breaking spaces inside regexes and strings.
+      "no-irregular-whitespace": ["error", { skipRegExps: true, skipStrings: true, skipTemplates: true }],
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
     },
   },

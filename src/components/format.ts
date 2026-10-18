@@ -28,3 +28,9 @@ export const STATUS_LABEL: Record<SubscriptionStatus, string> = {
   paused: "Paused",
   cancelled: "Cancelled",
 };
+
+/** "Jun 10, 2025" */
+export function formatFullDate(iso: ISODate): string {
+  const p = parseISODate(iso);
+  return p ? new Date(p.y, p.m - 1, p.d).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : iso;
+}

@@ -57,7 +57,7 @@ One Electron app, one codebase, for Windows 10/11 and macOS. TypeScript everywhe
 `contextIsolation`, `sandbox`, no `nodeIntegration`, IPC sender check, input re-validation in main, navigation/window-open blocked, production CSP, Electron Fuses (no RunAsNode, asar-only).
 
 ## Future (partner track)
-Milestone 4 detection lives in `electron/main/detection/` (TypeScript CSV import first), behind a `DetectionService` that returns *suggested* `SubscriptionInput`s. An optional Python sidecar (spawned child process, JSON over stdio) is allowed if the TS version is not enough; it must not be required to run the app.
+Milestone 4 detection: see `docs/DETECTION.md`. The renderer parses CSV into `Transaction`s, the main process validates them and runs a `SubscriptionDetector` (implementation: `electron/main/detection/recurringDetector.ts`), and the user confirms suggestions. A Python sidecar is only allowed by agreement and must not be required to run the app.
 
 ## Reminders (Milestone 3)
 - **Rules** are pure (`src/domain/reminders.ts`): active subscriptions whose next renewal (stale dates rolled forward) is within `reminderLeadDays`, after `reminderHour` local time, not already in `reminder_log`.
