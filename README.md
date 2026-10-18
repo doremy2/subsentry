@@ -22,7 +22,7 @@ npm run dev:web           # UI-only browser preview (works in Codespaces)
 npm run build             # typecheck + package
 npm run make              # installer for the current OS in out/make/
 ```
-macOS produces `.app` + `.dmg` (+ zip); Windows produces `SubSentry-Setup.exe` (+ zip). CI builds both on separate runners; see [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md) for signing and notarization.
+macOS produces `.app` + `.dmg` (+ zip) per architecture; Windows produces `SubSentry-Setup.exe` (+ zip). **Mac users:** download the `arm64` DMG for Apple Silicon (M1 and newer) or the `x64` DMG for Intel Macs (see [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md)). CI builds both on separate runners; see [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md) for signing and notarization.
 
 ## Using it
 - Drag the widget by its header or spend area; position is remembered per device.

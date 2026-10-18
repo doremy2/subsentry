@@ -31,7 +31,7 @@ No bundle? Unzip `subsentry-feature-import-ui.zip`, then `git init -b main && gi
 1. **Collaborators**: invite your partner (Settings > Collaborators > Add people, Write role). The repo is currently **public**; consider switching to private (Settings > General > Danger Zone) since this will hold a finance project.
 2. **Branch protection for `main`** (Settings > Branches > Add ruleset/rule):
    - Require a pull request before merging, **1 approval**
-   - Require status checks: `verify`, `build-macos`, `build-windows` (they appear after the first workflow run)
+   - Require status checks: `verify`, `build-macos`, `build-windows` (they appear after the first workflow run). `build-macos` is a summary job that passes only when both Mac builds (`build-macos-packages (arm64)` and `(x64)`) pass, so require `build-macos`, not the two individual names.
    - Require branches to be up to date; block force pushes; restrict deletions
 3. **General**: allow squash merging only; "Automatically delete head branches" on.
 4. **Secrets** (only for signing later): see `docs/DISTRIBUTION.md`.

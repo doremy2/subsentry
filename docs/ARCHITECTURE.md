@@ -32,7 +32,7 @@ One Electron app, one codebase, for Windows 10/11 and macOS. TypeScript everywhe
 - Adding a feature that crosses the boundary: add the channel + type in `electron/shared/api.ts`, handler in `ipc.ts`, bridge in `preload.ts`, wrapper in `src/data` or `src/desktop`.
 
 ## Why these choices
-- **`node:sqlite` (built into Electron's Node)** instead of better-sqlite3: no native module to compile/rebuild on Windows, macOS (Intel + Apple Silicon) or CI, so the app can be a universal build. Trade-off: the module is still marked experimental by Node; it sits behind the `Store` interface, so swapping to better-sqlite3 later touches only `electron/main/db/`.
+- **`node:sqlite` (built into Electron's Node)** instead of better-sqlite3: no native module to compile/rebuild on Windows, macOS (Intel and Apple Silicon) or CI, so packaging is simple for both Mac architectures (separate arm64 and x64 builds) and Windows. Trade-off: the module is still marked experimental by Node; it sits behind the `Store` interface, so swapping to better-sqlite3 later touches only `electron/main/db/`.
 - **Electron Forge + Vite plugin**: official packaging path; one config produces the Windows installer and the macOS DMG.
 - **Main process bundles its npm deps** (`vite.main.config.mts`); the packaged app ships no `node_modules`.
 
