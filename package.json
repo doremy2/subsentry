@@ -9,11 +9,16 @@
   "main": ".vite/build/main.js",
   "scripts": {
     "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
+    "dev": "electron-forge start",
+    "dev:web": "vite --config vite.renderer.config.mts --host",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
     "test:watch": "vitest",
+    "check": "npm run typecheck && npm run lint && npm run test",
+    "build": "npm run typecheck && electron-forge package",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
     "preview:web": "vite --config vite.renderer.config.mts"
   },
   "dependencies": {
@@ -29,15 +34,23 @@
     "@electron-forge/plugin-fuses": "^8",
     "@electron-forge/plugin-vite": "^8",
     "@electron/fuses": "^2",
+    "@eslint/js": "^9.39.5",
     "@tailwindcss/vite": "^4",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5",
     "electron": "^44",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^17.13.0",
     "tailwindcss": "^4",
     "typescript": "~5.9.0",
+    "typescript-eslint": "^8.71.2",
     "vite": "^7",
     "vitest": "^5"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

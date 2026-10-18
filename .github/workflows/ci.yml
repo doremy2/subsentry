@@ -2,17 +2,18 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
     tags: ["v*"]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # Fast, OS-independent checks (types + unit tests, incl. SQLite store tests).
+  # Fast, OS-independent checks (types + lint + unit/UI tests, incl. SQLite store tests).
+  # Branch protection on main should require this job plus build-macos and build-windows.
   verify:
     runs-on: ubuntu-latest
     steps:
@@ -21,6 +22,7 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm run typecheck
+      - run: npm run lint
       - run: npm test
 
   # Separate native runners: each OS builds and packages its own installer.

@@ -1,0 +1,29 @@
+{
+  "name": "SubSentry (Node 22)",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "postCreateCommand": "npm ci",
+  "forwardPorts": [1420],
+  "portsAttributes": {
+    "1420": { "label": "UI preview (browser only; run `npm run dev:web`)", "onAutoForward": "notify" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "vitest.explorer",
+        "github.vscode-pull-request-github"
+      ],
+      "settings": {
+        "typescript.tsdk": "node_modules/typescript/lib",
+        "editor.formatOnSave": false,
+        "eslint.useFlatConfig": true,
+        "files.eol": "\n",
+        "git.autofetch": true
+      }
+    }
+  }
+}

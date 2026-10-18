@@ -1,0 +1,6 @@
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "eslint.useFlatConfig": true,
+  "files.eol": "\n",
+  "search.exclude": { "out": true, ".vite": true, "package-lock.json": true }
+}

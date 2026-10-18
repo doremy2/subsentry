@@ -1,15 +1,53 @@
+# --- Dependencies & build output ---
 node_modules/
 dist/
-.env
-.env.*
-!.env.example
+out/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# --- Local databases (user data, never commit) ---
 *.db
 *.db-journal
 *.db-wal
 *.db-shm
+*.sqlite
+*.sqlite3
+
+# --- Personal financial data: bank/card exports ---
+# Real statements must never be committed. Only clearly-fake samples are allowed.
+*.csv
+*.ofx
+*.qfx
+!docs/samples/*.MOCK.csv
+
+# --- Secrets & signing material ---
+.env
+.env.*
+!.env.example
+*.p12
+*.pfx
+*.pem
+*.key
+*.cer
+*.mobileprovision
+*.provisionprofile
+.secrets/
+
+# --- Release artifacts ---
+*.zip
+*.bundle
+*.dmg
+*.exe
+*.nupkg
+*.pkg
+
+# --- Logs, OS and editor noise ---
 *.log
+npm-debug.log*
 .DS_Store
-.vite/
-out/
-.vite/
-out/
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json

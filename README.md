@@ -15,11 +15,11 @@ npm start                 # launches the real desktop widget with hot reload
 ```
 `npm run preview:web` serves only the UI in a browser with in-memory demo data (no window/tray/SQLite).
 
-## Test, build, package
+## Check, build, package
 ```bash
-npm run typecheck
-npm test                  # domain logic + SQLite store tests
-npm run package           # unpacked app in out/
+npm run check             # typecheck + lint + tests (what CI runs)
+npm run dev:web           # UI-only browser preview (works in Codespaces)
+npm run build             # typecheck + package
 npm run make              # installer for the current OS in out/make/
 ```
 macOS produces `.app` + `.dmg` (+ zip); Windows produces `SubSentry-Setup.exe` (+ zip). CI builds both on separate runners; see [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md) for signing and notarization.
@@ -43,8 +43,11 @@ assets/             app icons, tray icons
 docs/               architecture, data model, branching, roadmap, distribution
 ```
 
+## Collaboration
+Two developers, protected `main`, feature branches + pull requests: see [docs/BRANCHING.md](docs/BRANCHING.md). First-time GitHub setup: [docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md). Work in the cloud with [GitHub Codespaces](docs/CODESPACES.md) (editing, tests and builds only: the desktop window needs a local macOS/Windows machine).
+
 ## Docs
-[Architecture](docs/ARCHITECTURE.md) · [Data model](docs/DATA_MODEL.md) · [Roadmap](docs/ROADMAP.md) · [Branching](docs/BRANCHING.md) · [Distribution & signing](docs/DISTRIBUTION.md) · [AGENTS.md](AGENTS.md)
+[Architecture](docs/ARCHITECTURE.md) · [Data model](docs/DATA_MODEL.md) · [Roadmap](docs/ROADMAP.md) · [Branching](docs/BRANCHING.md) · [GitHub setup](docs/GITHUB_SETUP.md) · [Codespaces](docs/CODESPACES.md) · [Distribution & signing](docs/DISTRIBUTION.md) · [AGENTS.md](AGENTS.md)
 
 ## Known limits
 Transparency works on both OSes; blur/vibrancy, wallpaper-layer embedding, CSV detection (Milestone 4) and auto-update are not built yet. The earlier Tauri prototype is preserved at git tag `tauri-prototype`.
