@@ -32,6 +32,12 @@ export interface Preferences {
   mode: WidgetMode;
   /** Start SubSentry when the user logs in (applied through the OS login-item API). */
   launchOnLogin: boolean;
+  /** Send native notifications before renewals. */
+  remindersEnabled: boolean;
+  /** How many days before a renewal to remind (0 = on the day itself). */
+  reminderLeadDays: number;
+  /** Local hour of day (0-23) after which reminders may be sent. */
+  reminderHour: number;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -40,7 +46,13 @@ export const DEFAULT_PREFERENCES: Preferences = {
   alwaysOnTop: false,
   mode: "compact",
   launchOnLogin: false,
+  remindersEnabled: true,
+  reminderLeadDays: 3,
+  reminderHour: 9,
 };
+
+export const REMINDER_LEAD_OPTIONS = [0, 1, 2, 3, 5, 7, 14] as const;
+export const REMINDER_MAX_LEAD_DAYS = 30;
 
 export const OPACITY_RANGE = { min: 0.4, max: 1 } as const;
 

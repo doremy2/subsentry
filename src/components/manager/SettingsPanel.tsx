@@ -1,4 +1,4 @@
-import { ACCENTS, OPACITY_RANGE, type Accent } from "../../data/types";
+import { ACCENTS, OPACITY_RANGE, REMINDER_LEAD_OPTIONS, type Accent } from "../../data/types";
 import { useApp } from "../../state/appContext";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
@@ -76,6 +76,52 @@ export function SettingsPanel() {
           className="size-4 accent-[var(--accent)]"
         />
       </label>
+
+      <div>
+        <label className="mb-2 flex cursor-pointer items-center justify-between gap-3">
+          <span>
+            <span className="block text-sm">Renewal reminders</span>
+            <span className="block text-xs text-white/45">Native notification before a charge</span>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={preferences.remindersEnabled}
+            onChange={(e) => update({ remindersEnabled: e.target.checked })}
+            className="size-4 accent-[var(--accent)]"
+          />
+        </label>
+        <div className={`grid grid-cols-2 gap-2 transition-opacity ${preferences.remindersEnabled ? "" : "pointer-events-none opacity-40"}`}>
+          <label className="block">
+            <span className="mb-1 block text-[11px] text-white/45">Days before</span>
+            <select
+              className="field !py-1.5 text-xs"
+              aria-label="Days before renewal"
+              disabled={!preferences.remindersEnabled}
+              value={preferences.reminderLeadDays}
+              onChange={(e) => update({ reminderLeadDays: Number(e.target.value) })}
+            >
+              {REMINDER_LEAD_OPTIONS.map((d) => (
+                <option key={d} value={d}>{d === 0 ? "Same day" : d === 1 ? "1 day" : `${d} days`}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[11px] text-white/45">Not before</span>
+            <select
+              className="field !py-1.5 text-xs"
+              aria-label="Reminder time"
+              disabled={!preferences.remindersEnabled}
+              value={preferences.reminderHour}
+              onChange={(e) => update({ reminderHour: Number(e.target.value) })}
+            >
+              {Array.from({ length: 24 }, (_, h) => (
+                <option key={h} value={h}>{new Date(2000, 0, 1, h).toLocaleTimeString(undefined, { hour: "numeric" })}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </div>
 
       <Button className="w-full !py-1.5 text-xs" onClick={() => void showTestNotification().catch(reportError)}>
         Send test notification

@@ -9,7 +9,8 @@ One Electron app, one codebase, for Windows 10/11 and macOS. TypeScript everywhe
 │ window.ts                frameless widget, compact/expanded, per-device position    │
 │ tray.ts                  Windows tray icon / macOS menu bar item                    │
 │ ipc.ts                   validated, sender-checked IPC handlers                     │
-│ db/                      node:sqlite: migrations, Store (subscriptions, prefs)      │
+│ db/                      node:sqlite: migrations, Store (subscriptions, prefs, log) │
+│ reminders/scheduler.ts   checks on start, every 15 min, on wake + after edits       │
 └───────────────▲─────────────────────────────────────────────────────────────────────┘
                 │ typed IPC (electron/shared/api.ts) — contextBridge, sandboxed
 ┌───────────────┴──────────────── preload (electron/preload) ────────────────────────┐
@@ -57,3 +58,8 @@ One Electron app, one codebase, for Windows 10/11 and macOS. TypeScript everywhe
 
 ## Future (partner track)
 Milestone 4 detection lives in `electron/main/detection/` (TypeScript CSV import first), behind a `DetectionService` that returns *suggested* `SubscriptionInput`s. An optional Python sidecar (spawned child process, JSON over stdio) is allowed if the TS version is not enough; it must not be required to run the app.
+
+## Reminders (Milestone 3)
+- **Rules** are pure (`src/domain/reminders.ts`): active subscriptions whose next renewal (stale dates rolled forward) is within `reminderLeadDays`, after `reminderHour` local time, not already in `reminder_log`.
+- **Scheduler** (`electron/main/reminders/scheduler.ts`) sends ONE notification per check (a summary when several are due) and logs the occurrences only if the OS actually showed it; otherwise it retries on the next check. Triggers: 5 s after launch, every 15 min, `powerMonitor` resume, and after any subscription/preference change.
+- **Limits:** reminders only fire while the app is running (it stays in the tray/menu bar; enable launch at login). On macOS, notifications appear under the app name and need permission in System Settings > Notifications; unsigned dev builds appear as "Electron".

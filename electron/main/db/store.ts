@@ -3,6 +3,7 @@ import { decodePreferences, encodePreferencePatch } from "../../../src/data/pref
 import { buildSeedSubscriptions } from "../../../src/data/seed";
 import { DataError, type Preferences } from "../../../src/data/types";
 import { todayISO } from "../../../src/domain/dates";
+import { reminderKey } from "../../../src/domain/reminders";
 import type { Subscription, SubscriptionInput } from "../../../src/domain/subscription";
 import { rowToSubscription, SUBSCRIPTION_COLUMNS, type SubscriptionRow } from "./subscriptionMapper";
 
@@ -19,6 +20,11 @@ export interface Store {
   removeSubscription(id: string): void;
   loadPreferences(): Preferences;
   savePreferences(patch: Partial<Preferences>): Preferences;
+  /** Keys (`reminderKey`) of renewals already reminded about. */
+  getSentReminderKeys(): Set<string>;
+  markReminderSent(subscriptionId: string, renewalDate: string): void;
+  /** Forget log entries for renewals before `date` (keeps the table small). */
+  pruneReminderLog(beforeDate: string): void;
   /** Widget position is remembered per device so a synced profile never shares coordinates. */
   getWindowPosition(deviceId: string): WindowPosition | null;
   setWindowPosition(deviceId: string, position: WindowPosition): void;
@@ -78,6 +84,19 @@ export function createStore(db: DatabaseSync, now: () => Date = () => new Date()
     savePreferences(patch) {
       for (const { key, value } of encodePreferencePatch(patch)) writePref(key, value);
       return store.loadPreferences();
+    },
+
+    getSentReminderKeys() {
+      const rows = db.prepare("SELECT subscription_id, renewal_date FROM reminder_log").all() as Array<{ subscription_id: string; renewal_date: string }>;
+      return new Set(rows.map((r) => reminderKey(r.subscription_id, r.renewal_date)));
+    },
+
+    markReminderSent(subscriptionId, renewalDate) {
+      db.prepare("INSERT OR IGNORE INTO reminder_log (subscription_id, renewal_date, sent_at) VALUES (?, ?, ?)").run(subscriptionId, renewalDate, now().toISOString());
+    },
+
+    pruneReminderLog(beforeDate) {
+      db.prepare("DELETE FROM reminder_log WHERE renewal_date < ?").run(beforeDate);
     },
 
     getWindowPosition(deviceId) {

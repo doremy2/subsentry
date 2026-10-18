@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu } from "electron";
+import { app, BrowserWindow, Menu, powerMonitor } from "electron";
 import squirrelStartup from "electron-squirrel-startup";
 import { join } from "node:path";
 import type { Preferences } from "../../src/data/types";
@@ -6,6 +6,7 @@ import { CHANNELS } from "../shared/api";
 import { openDatabase } from "./db/database";
 import { createStore } from "./db/store";
 import { registerIpc } from "./ipc";
+import { createReminderScheduler, type ReminderScheduler } from "./reminders/scheduler";
 import { applyAlwaysOnTop, isMac, isWindows, setLaunchOnLogin, showNotification } from "./platform";
 import { createTray, type TrayController } from "./tray";
 import { createWidgetWindow, type WidgetWindow } from "./window";
@@ -19,6 +20,7 @@ if (squirrelStartup) app.quit();
 let quitting = false;
 let widget: WidgetWindow | undefined;
 let tray: TrayController | undefined;
+let reminders: ReminderScheduler | undefined;
 
 // One instance only: a second launch just brings the widget forward.
 if (!app.requestSingleInstanceLock()) app.quit();
@@ -68,6 +70,13 @@ void app.whenReady().then(() => {
   });
   tray.update({ alwaysOnTop: initial.alwaysOnTop });
 
+  // Renewal reminders: clicking the notification brings the widget forward.
+  reminders = createReminderScheduler({
+    store,
+    notify: (title, body) => showNotification(title, body, () => widget?.show()),
+  });
+  powerMonitor.on("resume", () => reminders?.checkNow()); // laptop woke up: catch up
+
   registerIpc({
     store,
     trustedSender: () => (win.isDestroyed() ? undefined : win.webContents),
@@ -75,7 +84,8 @@ void app.whenReady().then(() => {
     hideWindow: () => widget?.hide(),
     quit: () => app.quit(),
     applyPreferences,
-    showTestNotification: () => showNotification("SubSentry", "Notifications are working. Renewal reminders arrive in a later milestone."),
+    showTestNotification: () => void showNotification("SubSentry", "Notifications are working. You will be reminded before renewals.", () => widget?.show()),
+    onDataChanged: () => reminders?.checkNow(),
   });
 
   // macOS: clicking the Dock icon should bring the widget back.
@@ -84,6 +94,7 @@ void app.whenReady().then(() => {
 
 app.on("before-quit", () => {
   quitting = true;
+  reminders?.stop();
 });
 
 // Stay alive in the tray / menu bar when the window is hidden or closed.

@@ -25,6 +25,15 @@ export const MIGRATIONS: readonly string[] = [
     value TEXT NOT NULL
   );
   `,
+  // v2: remember which renewal occurrences were already reminded (one notification each)
+  `
+  CREATE TABLE reminder_log (
+    subscription_id TEXT NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+    renewal_date    TEXT NOT NULL,
+    sent_at         TEXT NOT NULL,
+    PRIMARY KEY (subscription_id, renewal_date)
+  );
+  `,
 ];
 
 export function migrate(db: DatabaseSync): void {

@@ -1,4 +1,7 @@
-import { ACCENTS, DEFAULT_PREFERENCES, OPACITY_RANGE, type Preferences } from "./types";
+import { ACCENTS, DEFAULT_PREFERENCES, OPACITY_RANGE, REMINDER_MAX_LEAD_DAYS, type Preferences } from "./types";
+
+const isInt = (value: unknown, min: number, max: number): value is number =>
+  typeof value === "number" && Number.isInteger(value) && value >= min && value <= max;
 
 /**
  * Preferences are stored as key -> JSON text. Decoding is defensive: a missing,
@@ -36,6 +39,13 @@ export function decodePreferences(rows: PreferenceRows): Preferences {
   const launchOnLogin = raw.get("launchOnLogin");
   if (typeof launchOnLogin === "boolean") prefs.launchOnLogin = launchOnLogin;
 
+  const remindersEnabled = raw.get("remindersEnabled");
+  if (typeof remindersEnabled === "boolean") prefs.remindersEnabled = remindersEnabled;
+  const leadDays = raw.get("reminderLeadDays");
+  if (isInt(leadDays, 0, REMINDER_MAX_LEAD_DAYS)) prefs.reminderLeadDays = leadDays;
+  const hour = raw.get("reminderHour");
+  if (isInt(hour, 0, 23)) prefs.reminderHour = hour;
+
   return prefs;
 }
 
@@ -60,5 +70,8 @@ export function sanitizePreferencePatch(input: unknown): Partial<Preferences> {
   if (typeof raw["alwaysOnTop"] === "boolean") patch.alwaysOnTop = raw["alwaysOnTop"];
   if (raw["mode"] === "compact" || raw["mode"] === "expanded") patch.mode = raw["mode"];
   if (typeof raw["launchOnLogin"] === "boolean") patch.launchOnLogin = raw["launchOnLogin"];
+  if (typeof raw["remindersEnabled"] === "boolean") patch.remindersEnabled = raw["remindersEnabled"];
+  if (isInt(raw["reminderLeadDays"], 0, REMINDER_MAX_LEAD_DAYS)) patch.reminderLeadDays = raw["reminderLeadDays"];
+  if (isInt(raw["reminderHour"], 0, 23)) patch.reminderHour = raw["reminderHour"];
   return patch;
 }

@@ -28,7 +28,7 @@ macOS produces `.app` + `.dmg` (+ zip); Windows produces `SubSentry-Setup.exe` (
 - Drag the widget by its header or spend area; position is remembered per device.
 - "Manage subscriptions" expands it; the collapse button returns to compact.
 - Hide sends it to the tray (Windows) / menu bar (macOS). Click the icon to toggle, right-click for the menu (Show/Hide, Always on top, Quit). Closing the window also just hides it.
-- Settings (in the manager): accent color, transparency, always on top, launch at login (packaged builds only), test notification.
+- Settings (in the manager): accent color, transparency, always on top, launch at login (packaged builds only), renewal reminders (days before, earliest time of day), test notification.
 - Demo data is inserted on first launch only. Database location: Electron's `userData` folder (`~/Library/Application Support/SubSentry` or `%APPDATA%\SubSentry`), file `subsentry.db`.
 
 ## Project layout
@@ -47,4 +47,4 @@ docs/               architecture, data model, branching, roadmap, distribution
 [Architecture](docs/ARCHITECTURE.md) · [Data model](docs/DATA_MODEL.md) · [Roadmap](docs/ROADMAP.md) · [Branching](docs/BRANCHING.md) · [Distribution & signing](docs/DISTRIBUTION.md) · [AGENTS.md](AGENTS.md)
 
 ## Known limits
-Transparency works on both OSes; blur/vibrancy, wallpaper-layer embedding, reminders (Milestone 3), CSV detection (Milestone 4) and auto-update are not built yet. The earlier Tauri prototype is preserved at git tag `tauri-prototype`.
+Transparency works on both OSes; blur/vibrancy, wallpaper-layer embedding, CSV detection (Milestone 4) and auto-update are not built yet. The earlier Tauri prototype is preserved at git tag `tauri-prototype`.

@@ -52,9 +52,13 @@ export function loadTrayIcon(assetsDir: string): NativeImage {
   return image;
 }
 
-export function showNotification(title: string, body: string): void {
-  if (!Notification.isSupported()) return;
-  new Notification({ title, body, silent: false }).show();
+/** Show a native notification. Returns false when the OS/user setup cannot show one. */
+export function showNotification(title: string, body: string, onClick?: () => void): boolean {
+  if (!Notification.isSupported()) return false;
+  const notification = new Notification({ title, body, silent: false });
+  if (onClick) notification.on("click", onClick);
+  notification.show();
+  return true;
 }
 
 /** Stable per-machine id (hash of host + user); never leaves the device. */

@@ -15,6 +15,8 @@ export interface IpcDependencies {
   /** Apply OS side effects of a preference change (always-on-top, login item, tray check mark). */
   applyPreferences(prefs: Preferences, patch: Partial<Preferences>): void;
   showTestNotification(): void;
+  /** Subscriptions or settings changed: lets the reminder scheduler re-check immediately. */
+  onDataChanged(): void;
 }
 
 /** Register a handler that rejects untrusted senders and returns errors as data. */
@@ -43,8 +45,12 @@ function requireInput(value: unknown) {
 export function registerIpc(deps: IpcDependencies): void {
   const { store } = deps;
   handle(CHANNELS.subscriptionsList, deps, () => store.listSubscriptions());
-  handle(CHANNELS.subscriptionsCreate, deps, (input) => store.createSubscription(requireInput(input)));
-  handle(CHANNELS.subscriptionsUpdate, deps, (id, input) => store.updateSubscription(requireId(id), requireInput(input)));
+  const changed = <T>(value: T): T => {
+    deps.onDataChanged();
+    return value;
+  };
+  handle(CHANNELS.subscriptionsCreate, deps, (input) => changed(store.createSubscription(requireInput(input))));
+  handle(CHANNELS.subscriptionsUpdate, deps, (id, input) => changed(store.updateSubscription(requireId(id), requireInput(input))));
   handle(CHANNELS.subscriptionsRemove, deps, (id) => store.removeSubscription(requireId(id)));
 
   handle(CHANNELS.preferencesLoad, deps, () => store.loadPreferences());
@@ -52,6 +58,7 @@ export function registerIpc(deps: IpcDependencies): void {
     const patch = sanitizePreferencePatch(patchInput);
     const prefs = store.savePreferences(patch);
     deps.applyPreferences(prefs, patch);
+    deps.onDataChanged();
     return prefs;
   });
 
