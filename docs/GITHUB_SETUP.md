@@ -9,9 +9,11 @@ git clone subsentry.bundle subsentry
 cd subsentry
 git remote set-url origin https://github.com/doremy2/subsentry.git
 git remote -v                        # must show github.com/doremy2/subsentry
-git branch -a                        # main, feature/import-ui, feature/csv-detection
-git push -u origin main              # stable app first
-git push origin feature/import-ui feature/csv-detection
+git branch -a                        # local: main; remotes/origin/{main,feature/import-ui,feature/csv-detection}
+git switch feature/import-ui         # creates a local branch from the bundle's copy
+git switch feature/csv-detection
+git switch main
+git push -u origin main feature/import-ui feature/csv-detection
 git push origin --tags
 ```
 If GitHub asks for a password, use `gh auth login` (brew install gh) or a Personal Access Token / SSH key; your account password does not work for git.
