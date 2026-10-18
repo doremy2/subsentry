@@ -39,6 +39,7 @@ export function ImportView({ detection }: { detection?: DetectionClient }) {
   const [source, setSource] = useState<Source | null>(null);
   const [mapping, setMapping] = useState<ColumnMapping>({ date: null, description: null, amount: null, debit: null, credit: null });
   const [options, setOptions] = useState<ImportOptions>(DEFAULT_IMPORT_OPTIONS);
+  const [mapperOpen, setMapperOpen] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<DetectionOutcome | null>(null);
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
@@ -64,7 +65,9 @@ export function ImportView({ detection }: { detection?: DetectionClient }) {
       const table = tableFromRows(parseCsv(text).rows);
       if (!table) return setFileError("That file has no data rows. A CSV needs a header row and at least one transaction.");
       setSource({ kind: "file", name: file.name, table });
-      setMapping(guessMapping(table.headers));
+      const guess = guessMapping(table.headers);
+      setMapping(guess);
+      setMapperOpen(!isMappingComplete(guess)); // collapsed when the guess is usable; open when the user must act
       setOptions(DEFAULT_IMPORT_OPTIONS);
       setStage("review");
     } catch (error) {
@@ -189,7 +192,15 @@ export function ImportView({ detection }: { detection?: DetectionClient }) {
         </div>
       </div>
       {source?.kind === "file" && (
-        <ColumnMapper headers={source.table.headers} mapping={mapping} options={options} onMappingChange={setMapping} onOptionsChange={setOptions} />
+        <ColumnMapper
+          headers={source.table.headers}
+          mapping={mapping}
+          options={options}
+          open={mapperOpen || !isMappingComplete(mapping)}
+          onOpenChange={setMapperOpen}
+          onMappingChange={setMapping}
+          onOptionsChange={setOptions}
+        />
       )}
       {source?.kind === "file" && !isMappingComplete(mapping) && (
         <p role="alert" className="text-sm text-warn">Choose the Date and Merchant columns, plus an Amount (or Debit/Credit) column.</p>

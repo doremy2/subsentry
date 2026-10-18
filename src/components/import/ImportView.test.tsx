@@ -160,6 +160,33 @@ describe("ImportView", () => {
     expect(within(screen.getByRole("region", { name: "Transaction preview" })).getByText("NETFLIX.COM")).toBeTruthy();
   });
 
+  it("collapses the Columns panel when the guess is usable, so the preview gets the space", async () => {
+    render(withApp(appValue(), <ImportView detection={mockClient()} />));
+    chooseFile(csvFile());
+    await screen.findByRole("region", { name: "Transaction preview" });
+    const mapper = screen.getByTestId("column-mapper") as HTMLDetailsElement;
+    expect(mapper.open).toBe(false);
+    expect(mapper.textContent).toContain("Date: Date");
+    expect(mapper.textContent).toContain("Merchant: Description");
+    expect(mapper.textContent).toContain("Amount: Amount");
+    // the user can still open it to adjust options
+    fireEvent.click(within(mapper).getByText("Edit"));
+    await waitFor(() => expect(mapper.open).toBe(true));
+  });
+
+  it("keeps the Columns panel open while the mapping is incomplete, then lets it collapse", async () => {
+    render(withApp(appValue(), <ImportView detection={mockClient()} />));
+    chooseFile(csvFile("When,Who,Sum\n01/15/2026,NETFLIX.COM,-15.49\n", "odd.csv"));
+    await screen.findByText("Find subscriptions");
+    const mapper = screen.getByTestId("column-mapper") as HTMLDetailsElement;
+    expect(mapper.open).toBe(true);
+    fireEvent.change(screen.getByLabelText("Date"), { target: { value: "0" } });
+    fireEvent.change(screen.getByLabelText("Merchant / description"), { target: { value: "1" } });
+    fireEvent.change(screen.getByLabelText("Amount"), { target: { value: "2" } });
+    expect(mapper.open).toBe(true); // stays put while the user is editing
+    expect(mapper.textContent).toContain("Date: When");
+  });
+
   it("flips signs for exports that list charges as positive", async () => {
     render(withApp(appValue(), <ImportView detection={mockClient()} />));
     chooseFile(csvFile("Date,Description,Amount\n01/15/2026,NETFLIX.COM,15.49\n", "card.csv"));
