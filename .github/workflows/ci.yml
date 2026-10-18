@@ -78,15 +78,18 @@ jobs:
           file "$BIN" | grep -q "$EXPECTED"
       - name: Name the installer by architecture
         run: |
+          # Publish the output tree as an annotation (visible without opening the raw log).
+          echo "::notice title=make output ($ARCH)::$(find out/make -type f | sort | tr '\n' '|')"
           VERSION=$(node -p "require('./package.json').version")
-          for f in out/make/*.dmg; do mv "$f" "out/make/SubSentry-$VERSION-mac-$ARCH.dmg"; done
-          ls -la out/make out/make/zip/darwin/* || true
+          DMG=$(find out/make -name "*.dmg" | head -1)
+          test -n "$DMG" || { echo "::error::No .dmg was produced under out/make"; exit 1; }
+          mv "$DMG" "$(dirname "$DMG")/SubSentry-$VERSION-mac-$ARCH.dmg"
       - uses: actions/upload-artifact@v4
         with:
           name: SubSentry-macos-${{ matrix.arch }}
           path: |
-            out/make/*.dmg
-            out/make/zip/darwin/**/*.zip
+            out/make/**/*.dmg
+            out/make/**/*.zip
           if-no-files-found: error
 
   # Stable check name for branch protection: passes only if BOTH macOS architectures built.
