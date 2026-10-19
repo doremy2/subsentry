@@ -49,8 +49,8 @@ One Electron app, one codebase, for Windows 10/11 and macOS. TypeScript everywhe
 | Window close | hides to tray; Quit from tray/Settings | hides to menu bar; Cmd+Q quits |
 
 ## Window behaviour
-- Frameless, transparent, non-resizable; size changes only through compact/expanded modes (`electron/shared/windowSizes.ts`). A 16px transparent margin hosts the CSS shadow.
-- Position saved per device (hash of host + user + OS) in `preferences.windowPositions`, restored only if still reachable on a connected display; otherwise placed top-right of the primary display.
+- Frameless and transparent. Size is controlled by us: compact/minimal/expanded layouts each have default, minimum and maximum sizes (`electron/shared/windowSizes.ts`) and are resizable through our own grips (see `docs/WIDGET_CUSTOMIZATION.md`). A 16px transparent margin hosts the CSS shadow.
+- Position and per-layout sizes saved per device (hash of host + user + OS) in `preferences.windowPositions`, restored only if still reachable on a connected display; otherwise placed top-right of the primary display.
 - Transparency: works on both OSes. Blur/vibrancy (Mica/acrylic, macOS vibrancy) is deferred; true wallpaper-layer embedding is out of scope.
 
 ## Security posture

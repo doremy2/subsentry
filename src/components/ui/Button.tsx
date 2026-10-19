@@ -5,9 +5,9 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANTS = {
-  primary: "bg-accent text-[#0d0e16] font-semibold hover:brightness-110",
+  primary: "bg-accent text-[var(--on-accent)] font-semibold hover:brightness-110",
   ghost: "bg-white/[0.07] text-white/85 hover:bg-white/[0.12]",
-  danger: "bg-danger/90 text-[#1a0b0e] font-semibold hover:brightness-110",
+  danger: "bg-danger/90 text-[var(--on-accent)] font-semibold hover:brightness-110",
 };
 
 export function Button({ variant = "ghost", className = "", type = "button", ...rest }: Props) {

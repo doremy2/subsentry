@@ -31,7 +31,7 @@ export function SuggestionCard({ suggestion: s, today, decision, onConfirm, onRe
   const settled = decision?.status === "added" || decision?.status === "rejected";
 
   return (
-    <li className={`panel animate-fade-up rounded-2xl p-4 transition ${decision?.status === "rejected" ? "opacity-50" : ""}`} data-testid="suggestion">
+    <li className={`panel lift animate-fade-up rounded-2xl p-4 transition ${decision?.status === "rejected" ? "opacity-50" : ""}`} data-testid="suggestion">
       <div className="flex items-start gap-4">
         <MerchantAvatar name={proposed.merchant} size={40} dimmed={decision?.status === "rejected"} />
         <div className="min-w-0 flex-1">

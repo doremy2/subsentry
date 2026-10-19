@@ -5,6 +5,7 @@ import { DataError, type Preferences } from "../../../src/data/types";
 import { todayISO } from "../../../src/domain/dates";
 import { reminderKey } from "../../../src/domain/reminders";
 import type { Subscription, SubscriptionInput } from "../../../src/domain/subscription";
+import { isSize, type LayoutKey, type Size } from "../../shared/windowSizes";
 import { rowToSubscription, SUBSCRIPTION_COLUMNS, type SubscriptionRow } from "./subscriptionMapper";
 
 export interface WindowPosition {
@@ -25,6 +26,11 @@ export interface Store {
   markReminderSent(subscriptionId: string, renewalDate: string): void;
   /** Forget log entries for renewals before `date` (keeps the table small). */
   pruneReminderLog(beforeDate: string): void;
+  /** Window size per layout, remembered per device (null = use the default). */
+  getWindowSize(deviceId: string, layout: LayoutKey): Size | null;
+  setWindowSize(deviceId: string, layout: LayoutKey, size: Size): void;
+  /** Forget this device's saved sizes (the "Reset size" button). */
+  clearWindowSizes(deviceId: string): void;
   /** Widget position is remembered per device so a synced profile never shares coordinates. */
   getWindowPosition(deviceId: string): WindowPosition | null;
   setWindowPosition(deviceId: string, position: WindowPosition): void;
@@ -32,6 +38,7 @@ export interface Store {
 
 const SEEDED_KEY = "seeded";
 const POSITIONS_KEY = "windowPositions";
+const SIZES_KEY = "windowSizes";
 
 export function createStore(db: DatabaseSync, now: () => Date = () => new Date()): Store {
   const getById = (id: string): Subscription => {
@@ -49,6 +56,16 @@ export function createStore(db: DatabaseSync, now: () => Date = () => new Date()
     try {
       const parsed: unknown = JSON.parse(readPref(POSITIONS_KEY) ?? "{}");
       return parsed && typeof parsed === "object" ? (parsed as Record<string, WindowPosition>) : {};
+    } catch {
+      return {};
+    }
+  };
+
+  type SizesByDevice = Record<string, Partial<Record<LayoutKey, Size>>>;
+  const readSizes = (): SizesByDevice => {
+    try {
+      const parsed: unknown = JSON.parse(readPref(SIZES_KEY) ?? "{}");
+      return parsed && typeof parsed === "object" ? (parsed as SizesByDevice) : {};
     } catch {
       return {};
     }
@@ -97,6 +114,21 @@ export function createStore(db: DatabaseSync, now: () => Date = () => new Date()
 
     pruneReminderLog(beforeDate) {
       db.prepare("DELETE FROM reminder_log WHERE renewal_date < ?").run(beforeDate);
+    },
+
+    getWindowSize(deviceId, layout) {
+      const size = readSizes()[deviceId]?.[layout];
+      return isSize(size) ? size : null;
+    },
+
+    setWindowSize(deviceId, layout, size) {
+      const all = readSizes();
+      writePref(SIZES_KEY, JSON.stringify({ ...all, [deviceId]: { ...all[deviceId], [layout]: size } }));
+    },
+
+    clearWindowSizes(deviceId) {
+      const { [deviceId]: _removed, ...rest } = readSizes();
+      writePref(SIZES_KEY, JSON.stringify(rest));
     },
 
     getWindowPosition(deviceId) {

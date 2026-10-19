@@ -63,6 +63,20 @@ git fetch origin && git merge origin/main
 ```
 Commit messages: short imperative first line (`Add transaction preview table`), optional body explaining *why*.
 
+## Stacked branches (one PR builds on another)
+Sometimes branch B is built on branch A (e.g. `feature/widget-customization` on `feature/import-ui`). Open B's PR **against A** (or against `main` once A merges) so the diff shows only B's work.
+
+**Squash-merging A breaks B.** Squashing rewrites A's commits into one new commit, so merging `main` into B afterwards conflicts (both sides "add" the same files). Rehearsed on this repo: 5 conflicts. Two safe options:
+1. Merge A with a **merge commit** (not squash) when something is stacked on it; then simply `git merge origin/main` into B.
+2. After A was squash-merged, replay only B's own commits onto the new `main`:
+   ```bash
+   git fetch origin
+   git rebase --onto origin/main <old tip of A> B     # old tip = the commit A's branch ended on, e.g. dfb2059
+   npm run check
+   git push --force-with-lease origin B               # B is your own branch; tell the other developer first
+   ```
+   Check with `git diff <B before rebase> B` that the tree is unchanged.
+
 ## Resolving merge conflicts
 1. `git fetch origin && git merge origin/main` into **your** branch (never resolve on `main`). If it gets confusing: `git merge --abort` and ask.
 2. `git status` lists conflicted files. Open each (VS Code "Resolve in Merge Editor" works well). Keep **both** sides' intent; delete all `<<<<<<<`, `=======`, `>>>>>>>` markers.

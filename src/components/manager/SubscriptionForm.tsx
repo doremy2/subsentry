@@ -92,7 +92,7 @@ export function SubscriptionForm({ initial, today, onSubmit, onCancel }: Props) 
         role="dialog"
         aria-modal="true"
         aria-label={initial ? "Edit subscription" : "Add subscription"}
-        className="animate-pop w-full max-w-[420px] rounded-3xl border border-white/10 bg-[#171824] p-6 shadow-2xl"
+        className="animate-pop w-full max-w-[420px] rounded-3xl border border-white/10 bg-[var(--overlay)] p-6 shadow-2xl"
       >
         <h2 className="mb-4 text-lg font-semibold">{initial ? "Edit subscription" : "Add subscription"}</h2>
         <div className="space-y-3">

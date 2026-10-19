@@ -18,6 +18,9 @@ export function widgetWindowOptions(): BrowserWindowConstructorOptions {
     transparent: true,
     backgroundColor: "#00000000",
     hasShadow: false, // the card draws its own soft shadow
+    // macOS: the first click on an unfocused window normally only focuses it and never reaches the page,
+    // which would swallow a resize-grip press (and the first click on any button) on a background widget.
+    acceptFirstMouse: true,
     resizable: false, // size changes only via our compact/expanded modes
     maximizable: false,
     fullscreenable: false,

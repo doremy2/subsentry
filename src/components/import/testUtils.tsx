@@ -1,6 +1,7 @@
 import { vi } from "vitest";
 import type { ReactNode } from "react";
 import { DEFAULT_PREFERENCES } from "../../data/types";
+import { DEFAULT_SIZES } from "../../../electron/shared/windowSizes";
 import type { DetectionClient } from "../../data/detectionClient";
 import { mockDetector } from "../../domain/detection/mock";
 import { runDetection } from "../../domain/detection/run";
@@ -23,6 +24,11 @@ export function appValue(overrides: Partial<AppState & AppActions> = {}): AppSta
     updatePreferences: vi.fn(async () => {}),
     setMode: vi.fn(async () => {}),
     hideWindow: vi.fn(async () => {}),
+    beginResize: vi.fn(async () => {}),
+    endResize: vi.fn(async () => {}),
+    resetWindowSize: vi.fn(async () => {}),
+    setLayoutSize: vi.fn(async (_layout, size) => size),
+    getLayoutSizes: vi.fn(async () => DEFAULT_SIZES),
     quit: vi.fn(async () => {}),
     showTestNotification: vi.fn(async () => {}),
     reportError: vi.fn(),
