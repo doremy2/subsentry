@@ -6,6 +6,9 @@ import type { CompactLayout, WidgetMode } from "../../src/data/types";
  * transparent margin per side that hosts the card's CSS shadow.
  */
 
+/** Transparent margin around the visible card that hosts its shadow (and the outer part of the resize grips), px. */
+export const WINDOW_MARGIN = 16;
+
 export interface Size {
   width: number;
   height: number;

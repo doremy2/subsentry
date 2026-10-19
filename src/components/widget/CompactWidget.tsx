@@ -4,7 +4,6 @@ import { formatMoney } from "../../domain/money";
 import { useApp } from "../../state/appContext";
 import { useToday } from "../../state/useToday";
 import { useWindowHeight } from "../../state/useWindowHeight";
-import { ResizeGrips } from "../ui/ResizeGrips";
 import { formatShortDate, INTERVAL_SUFFIX } from "../format";
 import { Button } from "../ui/Button";
 import { NoticeBanner } from "../ui/Feedback";
@@ -126,11 +125,10 @@ export function CompactWidget() {
       {minimal ? (
         <div className="h-4" />
       ) : (
-        <footer className="px-4 pb-4 pt-2">
+        <footer className="px-4 pb-5 pt-2">
           <Button className="w-full" onClick={expand}>Manage subscriptions</Button>
         </footer>
       )}
-      <ResizeGrips />
     </div>
   );
 }

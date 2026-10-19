@@ -157,6 +157,7 @@ textarea { user-select: text; }
 
 /* Frameless-window dragging (Electron). Interactive children must opt out. */
 [data-drag] { -webkit-app-region: drag; }
+.no-drag { -webkit-app-region: no-drag; }
 [data-drag] button,
 [data-drag] input,
 [data-drag] select,

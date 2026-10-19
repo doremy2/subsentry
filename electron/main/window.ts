@@ -43,7 +43,15 @@ function roomFrom(rect: Rect): Size {
 }
 
 const RESIZE_TICK_MS = 16; // ~60 Hz
-const RESIZE_MAX_MS = 60_000; // safety net if the renderer never reports mouse-up
+const RESIZE_MAX_MS = 30_000; // safety net if the renderer never reports mouse-up
+
+/**
+ * `SUBSENTRY_DEBUG_RESIZE=1 npm start` prints what the resize does in the terminal:
+ *   no "[resize] begin" line  -> the press never reached the app (hit-testing / drag region / focus)
+ *   "begin" but size unchanged -> the app tried, the OS window did not change (see the warning line)
+ */
+const debugResize = process.env["SUBSENTRY_DEBUG_RESIZE"] === "1";
+const logResize = (...args: unknown[]) => debugResize && console.info("[resize]", ...args);
 
 export interface WidgetWindow {
   window: BrowserWindow;
@@ -137,6 +145,7 @@ export function createWidgetWindow(store: Store, options: { mode: WidgetMode; al
     if (window.isDestroyed()) return;
     const [width = 0, height = 0] = window.getSize();
     store.setWindowSize(device, key, { width, height }); // remembered per device and layout
+    logResize(`end layout=${key} saved=${width}x${height}`);
   };
   window.on("closed", endResize);
 
@@ -168,6 +177,9 @@ export function createWidgetWindow(store: Store, options: { mode: WidgetMode; al
       const key = layoutKeyFor(prefs.mode, prefs.compactLayout);
       const [width = 0, height = 0] = window.getSize();
       const start = { size: { width, height }, cursor: screen.getCursorScreenPoint() };
+      logResize(`begin axis=${axis} layout=${key} startSize=${width}x${height} cursor=${start.cursor.x},${start.cursor.y} resizable=${window.isResizable()}`);
+      let ticks = 0;
+      let ineffective = 0;
       // The window follows the OS cursor, so it works the same on Windows and macOS and
       // does not depend on native resize borders (unsupported on transparent Windows windows).
       const timer = setInterval(() => {
@@ -176,7 +188,16 @@ export function createWidgetWindow(store: Store, options: { mode: WidgetMode; al
         const [x = 0, y = 0] = window.getPosition();
         const next = resizedSize(start.size, { dx: cursor.x - start.cursor.x, dy: cursor.y - start.cursor.y }, axis, key, roomFrom({ x, y, width: 1, height: 1 }));
         const [w = 0, h = 0] = window.getSize();
-        if (next.width !== w || next.height !== h) window.setBounds({ x, y, ...next });
+        ticks += 1;
+        if (next.width !== w || next.height !== h) {
+          window.setBounds({ x, y, ...next });
+          const [aw = 0, ah = 0] = window.getSize();
+          if (aw !== next.width || ah !== next.height) {
+            ineffective += 1;
+            if (ineffective === 10) logResize(`WARNING setBounds had no effect: requested ${next.width}x${next.height}, window is ${aw}x${ah}`);
+          } else ineffective = 0;
+          if (ticks === 1 || ticks % 30 === 0) logResize(`tick ${ticks}: cursor=${cursor.x},${cursor.y} -> ${aw}x${ah}`);
+        }
       }, RESIZE_TICK_MS);
       resize = { timer, key, stopAt: setTimeout(endResize, RESIZE_MAX_MS) };
     },

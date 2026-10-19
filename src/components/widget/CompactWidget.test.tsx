@@ -49,13 +49,4 @@ describe("CompactWidget layouts", () => {
     expect(screen.queryByText("Manage subscriptions")).toBeNull();
     expect(screen.getByLabelText("Open manager")).toBeTruthy(); // header control still opens the manager
   });
-
-  it("shows resize grips in the desktop app but not in a browser preview", () => {
-    setHeight(548);
-    const { unmount } = renderWidget("detailed", "win32");
-    expect(screen.getByTestId("grip-both")).toBeTruthy();
-    unmount();
-    renderWidget("detailed", "web");
-    expect(screen.queryByTestId("grip-both")).toBeNull();
-  });
 });

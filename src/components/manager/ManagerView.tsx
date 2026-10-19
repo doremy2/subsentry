@@ -10,7 +10,6 @@ import { NoticeBanner } from "../ui/Feedback";
 import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
 import { ImportView } from "../import/ImportView";
-import { ResizeGrips } from "../ui/ResizeGrips";
 import { SettingsPanel } from "./SettingsPanel";
 import { SubscriptionForm } from "./SubscriptionForm";
 import { SubscriptionRow } from "./SubscriptionRow";
@@ -140,7 +139,6 @@ export function ManagerView() {
         </main>
       </div>
 
-      <ResizeGrips />
       {editing && (
         <SubscriptionForm
           {...(editing.kind === "edit" && { initial: editing.subscription })}
