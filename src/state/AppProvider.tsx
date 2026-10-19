@@ -90,6 +90,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       beginResize: (axis) => rt().win.beginResize(axis),
       endResize: () => rt().win.endResize(),
       resetWindowSize: () => rt().win.resetSize(),
+      setLayoutSize: (layout, size) => rt().win.setLayoutSize(layout, size),
+      getLayoutSizes: () => rt().win.getLayoutSizes(),
       quit: () => rt().win.quit(),
       showTestNotification: () => rt().win.showTestNotification(),
       platform: getRuntime().win.platform,

@@ -69,3 +69,43 @@ export function isSize(value: unknown): value is Size {
   const v = value as Partial<Size> | null;
   return !!v && typeof v === "object" && Number.isFinite(v.width) && Number.isFinite(v.height);
 }
+
+/* ---- Custom size (Settings): users think in the VISIBLE widget size, not the window with its shadow margin ---- */
+
+export const toCardSize = (windowSize: Size): Size => ({ width: windowSize.width - 2 * WINDOW_MARGIN, height: windowSize.height - 2 * WINDOW_MARGIN });
+export const toWindowSize = (cardSize: Size): Size => ({ width: cardSize.width + 2 * WINDOW_MARGIN, height: cardSize.height + 2 * WINDOW_MARGIN });
+
+/** Allowed visible-widget sizes for a layout, in px. */
+export function cardLimits(key: LayoutKey): { min: Size; max: Size } {
+  return { min: toCardSize(MIN_SIZES[key]), max: toCardSize(MAX_SIZES[key]) };
+}
+
+export type CustomSizeResult = { ok: true; size: Size } | { ok: false; errors: { width?: string; height?: string } };
+
+/**
+ * Validate typed width/height (visible widget size, px) for a layout. Returns the WINDOW size to apply.
+ * Whole numbers only; out-of-range values are rejected with a message, never silently changed.
+ */
+export function parseCustomSize(widthText: string, heightText: string, key: LayoutKey): CustomSizeResult {
+  const { min, max } = cardLimits(key);
+  const errors: { width?: string; height?: string } = {};
+
+  /** The number if valid; otherwise records a message under `field` and returns null. */
+  const read = (field: "width" | "height", text: string, lo: number, hi: number): number | null => {
+    const label = field === "width" ? "Width" : "Height";
+    const trimmed = text.trim();
+    if (trimmed === "") errors[field] = `Enter a ${field}.`;
+    else if (!/^\d{1,5}$/.test(trimmed)) errors[field] = "Use a whole number, e.g. 400.";
+    else if (Number(trimmed) < lo || Number(trimmed) > hi) errors[field] = `${label} must be ${lo}\u2013${hi} px.`;
+    else return Number(trimmed);
+    return null;
+  };
+
+  const width = read("width", widthText, min.width, max.width);
+  const height = read("height", heightText, min.height, max.height);
+  if (width === null || height === null) return { ok: false, errors };
+  return { ok: true, size: toWindowSize({ width, height }) };
+}
+
+export const LAYOUT_KEYS = ["compact", "minimal", "expanded"] as const;
+export const isLayoutKey = (value: unknown): value is LayoutKey => (LAYOUT_KEYS as readonly unknown[]).includes(value);

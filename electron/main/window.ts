@@ -2,7 +2,7 @@ import { BrowserWindow, screen, shell } from "electron";
 import { join } from "node:path";
 import type { WidgetMode } from "../../src/data/types";
 import { EMPTY_PLACEMENT, originOnCollapse, rememberAfterExpand, rememberBeforeExpand, type PlacementMemory, type Point } from "../shared/windowPlacement";
-import { clampSize, DEFAULT_SIZES, layoutKeyFor, resizedSize, type LayoutKey, type ResizeAxis, type Size } from "../shared/windowSizes";
+import { clampSize, DEFAULT_SIZES, LAYOUT_KEYS, layoutKeyFor, resizedSize, type LayoutKey, type ResizeAxis, type Size } from "../shared/windowSizes";
 import type { Store } from "./db/store";
 import { applyAlwaysOnTop, deviceId, widgetWindowOptions } from "./platform";
 
@@ -63,6 +63,13 @@ export interface WidgetWindow {
   endResize(): void;
   /** Forget saved sizes and return the current layout to its default size. */
   resetSize(): void;
+  /**
+   * Set and remember the size of a layout (Settings > custom size). Same clamp + persist + fit-to-screen
+   * path as dragging. Applies immediately if that layout is showing. Returns the window size that fits now.
+   */
+  setLayoutSize(layout: LayoutKey, size: Size): Size;
+  /** The window size each layout will use (saved or default, limited to the screen). */
+  getLayoutSizes(): Record<LayoutKey, Size>;
   toggleVisibility(): void;
   show(): void;
   hide(): void;
@@ -128,6 +135,13 @@ export function createWidgetWindow(store: Store, options: { mode: WidgetMode; al
     const { workArea } = screen.getDisplayMatching({ x, y, width: 1, height: 1 });
     const next = sizeFor(key, { width: workArea.width, height: workArea.height });
     window.setBounds(clampToDisplay({ x, y, ...next }));
+  };
+
+  /** Size of the display work area the widget is on. */
+  const availableArea = (): Size => {
+    const [x = 0, y = 0] = window.getPosition();
+    const { workArea } = screen.getDisplayMatching({ x, y, width: 1, height: 1 });
+    return { width: workArea.width, height: workArea.height };
   };
 
   // Expanding can slide the window to fit; collapsing puts it back unless the user moved it meanwhile.
@@ -202,6 +216,17 @@ export function createWidgetWindow(store: Store, options: { mode: WidgetMode; al
       resize = { timer, key, stopAt: setTimeout(endResize, RESIZE_MAX_MS) };
     },
     endResize,
+    setLayoutSize(layout, requested) {
+      endResize();
+      store.setWindowSize(device, layout, clampSize(layout, requested)); // min/max only: remember the user's intent
+      const prefs = store.loadPreferences();
+      if (layoutKeyFor(prefs.mode, prefs.compactLayout) === layout) fitTo(layout);
+      return sizeFor(layout, availableArea());
+    },
+    getLayoutSizes() {
+      const area = availableArea();
+      return Object.fromEntries(LAYOUT_KEYS.map((key) => [key, sizeFor(key, area)])) as Record<LayoutKey, Size>;
+    },
     resetSize() {
       endResize();
       store.clearWindowSizes(device);

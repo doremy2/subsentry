@@ -32,6 +32,8 @@ const api: SubSentryApi = {
     beginResize: (axis) => call(CHANNELS.windowResizeStart, axis),
     endResize: () => call(CHANNELS.windowResizeEnd),
     resetSize: () => call(CHANNELS.windowResetSize),
+    setLayoutSize: (layout, size) => call(CHANNELS.windowSetLayoutSize, layout, size),
+    getSizes: () => call(CHANNELS.windowGetSizes),
   },
   app: { quit: () => call(CHANNELS.appQuit) },
   system: { showTestNotification: () => call(CHANNELS.systemTestNotification) },

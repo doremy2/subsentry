@@ -1,5 +1,5 @@
 import type { Preferences, WidgetMode } from "../../src/data/types";
-import type { ResizeAxis } from "./windowSizes";
+import type { LayoutKey, ResizeAxis, Size } from "./windowSizes";
 import type { DetectionOutcome, Transaction } from "../../src/domain/detection/types";
 import type { Subscription, SubscriptionInput } from "../../src/domain/subscription";
 
@@ -17,6 +17,8 @@ export const CHANNELS = {
   windowResizeStart: "window:resizeStart",
   windowResizeEnd: "window:resizeEnd",
   windowResetSize: "window:resetSize",
+  windowSetLayoutSize: "window:setLayoutSize",
+  windowGetSizes: "window:getSizes",
   appQuit: "app:quit",
   systemTestNotification: "system:testNotification",
   detectionAnalyze: "detection:analyze",
@@ -52,6 +54,10 @@ export interface SubSentryApi {
     endResize(): Promise<void>;
     /** Return the current layout to its default size and forget saved sizes for this device. */
     resetSize(): Promise<void>;
+    /** Set and remember a layout's WINDOW size (incl. shadow margin). Returns the size that fits now. */
+    setLayoutSize(layout: LayoutKey, size: Size): Promise<Size>;
+    /** The window size each layout will use. */
+    getSizes(): Promise<Record<LayoutKey, Size>>;
   };
   app: { quit(): Promise<void> };
   system: { showTestNotification(): Promise<void> };

@@ -18,15 +18,41 @@ Inspect saved settings any time (macOS has `sqlite3` built in):
 sqlite3 ~/Library/Application\ Support/SubSentry/subsentry.db "select key, value from preferences;"
 ```
 
-## 1. Native resizing
-- [ ] Hover the widget's bottom-right corner: cursor becomes a diagonal resize cursor and a small grip appears. Drag: the window grows/shrinks smoothly with the mouse (no lag, no jumping).
-- [ ] Drag the right edge: only the width changes. Drag the bottom edge: only the height changes.
-- [ ] Shrink as far as you can: it stops at a sensible minimum and nothing is cut off. Grow as far as you can: it stops at a maximum and never goes off the screen's edge.
-- [ ] Release the mouse **outside** the window while dragging: the resize still ends (window does not keep following the cursor).
-- [ ] Detailed layout: making the window taller shows more upcoming renewals; shorter shows fewer.
-- [ ] Trackpad: same results (not just a mouse).
-- [ ] Open Manage > Settings > Widget layout > **Minimal**, collapse the manager: compact widget becomes short and shows only spend + next payment. Switch back to **Detailed**: your earlier compact size returns.
-- [ ] Settings > **Reset window size** returns the current layout to its default (compact 392x548 incl. margin).
+## 1. Native resizing  (**macOS resizing is NOT verified yet.** An earlier build failed on a real Mac; this build has fixes that worked on Linux only)
+
+**What you should see:** a faint diagonal "grip" mark at the bottom-right corner of the widget. Hover it: it turns the accent color. Hover the middle of the **right edge** or **bottom edge**: a thin accent-colored pill appears. Each handle is about 18 px wide and reaches both inside and just outside the card edge, so you do not have to aim precisely.
+
+Run with diagnostics so a failure can be explained (keep the terminal visible):
+```bash
+SUBSENTRY_DEBUG_RESIZE=1 npm start
+```
+- [ ] **Corner:** press on the grip mark and drag diagonally. Expected: the widget grows/shrinks with the mouse; the terminal prints `[resize] begin axis=both ...`, some `tick` lines and `end ... saved=WxH`.
+- [ ] **Right edge:** press 3-10 px inside the right edge, halfway down, and drag left/right. Only the width changes.
+- [ ] **Bottom edge:** same for the bottom edge; only the height changes.
+- [ ] **Overlap with the draggable area:** press the right edge *next to the big spend number* (the area that normally drags the window). Expected: it **resizes**, the window does not move.
+- [ ] **First click on a background widget:** click another app so SubSentry is not focused, then press and drag a grip immediately. Expected: it resizes on the first try (this is what `acceptFirstMouse` fixes).
+- [ ] **Release outside:** drag so the cursor leaves the window, release there. The resize must end (the widget must not keep following the mouse).
+- [ ] **Limits:** shrink to the minimum and grow to the maximum: it stops (compact min 320x428, max 528x868 of visible widget), never clips content, never leaves the screen.
+- [ ] Trackpad: repeat the corner drag with a trackpad (tap-and-drag or click-and-drag).
+- [ ] Detailed layout: a taller widget shows more upcoming renewals.
+
+**Reading the terminal output if it does not work**
+| What you see | Meaning |
+|---|---|
+| **No** `[resize] begin` line when you press a grip | The press never reached the app (something covers the grip, a drag region wins, or the window ignored the click). Tell me exactly where you pressed. |
+| `begin` appears but the window does not change, plus `WARNING setBounds had no effect` | The app tried, but macOS refused to resize the window. Paste the whole `begin ... WARNING` block. |
+| `begin`, `tick` lines and the window changes, but `end` never appears | Releasing the mouse was not detected. Say whether you released inside or outside the window. |
+| It works | Note which of the above checks passed. |
+
+### Custom size (Settings > Widget layout > Custom size)
+- [ ] Choose **Compact (Detailed)**: the width/height fields show the current visible size (default 360 x 516).
+- [ ] Enter 420 and 600, **Apply size**: the message says "Applied 420 x 600 px."; collapse to the widget and confirm it is that size (a ruler/screenshot tool such as Cmd+Shift+4 shows pixel sizes in points).
+- [ ] Enter 100 and 99999: red messages state the allowed range and the widget does not change.
+- [ ] Enter the exact minimum (320 and 428) and maximum (528 and 868): accepted.
+- [ ] Choose **Expanded manager** and apply a size: the manager resizes immediately.
+- [ ] Enter a size larger than your screen: the message says "Fitted to your screen: ...".
+- [ ] Quit completely (menu bar > Quit) and relaunch: the sizes you set or dragged come back, for each layout.
+- [ ] **Reset window size** returns everything to defaults.
 
 ## 2. Window positioning
 - [ ] Drag the widget by its header (and by the big spend number) to a new spot, quit (tray/menu bar > Quit), relaunch: it reopens in the same place.

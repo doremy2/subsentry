@@ -2,6 +2,7 @@ import { ACCENTS, COMPACT_LAYOUTS, OPACITY_RANGE, REMINDER_LEAD_OPTIONS, THEMES,
 import { useApp } from "../../state/appContext";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
+import { CustomSizeForm } from "./CustomSizeForm";
 
 const SWATCH: Record<Accent, string> = { indigo: "#8b8cff", teal: "#4fd1c5", rose: "#ff7a9c", amber: "#f5b84b" };
 
@@ -102,6 +103,7 @@ export function SettingsPanel() {
           ))}
         </div>
         <p className="mt-1.5 text-[11px] text-white/40">Drag the widget's right or bottom edge, or its corner, to resize it.</p>
+        <CustomSizeForm />
         {platform !== "web" && (
           <Button className="mt-2 w-full !py-1.5 text-xs" onClick={() => void resetWindowSize().catch(reportError)}>Reset window size</Button>
         )}

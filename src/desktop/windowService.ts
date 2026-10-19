@@ -1,4 +1,5 @@
 import type { WidgetMode } from "../data/types";
+import { DEFAULT_SIZES, type LayoutKey, type Size } from "../../electron/shared/windowSizes";
 
 /**
  * What the UI needs from the native window. Implemented over Electron IPC;
@@ -14,6 +15,9 @@ export interface WindowService {
   beginResize(axis: "both" | "x" | "y"): Promise<void>;
   endResize(): Promise<void>;
   resetSize(): Promise<void>;
+  /** Custom size: sets and remembers a layout's window size; resolves with the size that fits now. */
+  setLayoutSize(layout: LayoutKey, size: Size): Promise<Size>;
+  getLayoutSizes(): Promise<Record<LayoutKey, Size>>;
   quit(): Promise<void>;
   showTestNotification(): Promise<void>;
   /** Subscribe to preference changes made outside the UI (tray menu). Returns unsubscribe. */
@@ -25,7 +29,7 @@ const noop = async () => {};
 export function createWindowService(): WindowService {
   const api = window.subsentry;
   if (!api) {
-    return { platform: "web", setMode: noop, hide: noop, beginResize: noop, endResize: noop, resetSize: noop, quit: noop, showTestNotification: noop, onPreferencesChanged: () => () => {} };
+    return { platform: "web", setMode: noop, hide: noop, beginResize: noop, endResize: noop, resetSize: noop, setLayoutSize: async (_layout, size) => size, getLayoutSizes: async () => DEFAULT_SIZES, quit: noop, showTestNotification: noop, onPreferencesChanged: () => () => {} };
   }
   return {
     platform: api.platform,
@@ -34,6 +38,8 @@ export function createWindowService(): WindowService {
     beginResize: api.window.beginResize,
     endResize: api.window.endResize,
     resetSize: api.window.resetSize,
+    setLayoutSize: api.window.setLayoutSize,
+    getLayoutSizes: api.window.getSizes,
     quit: api.app.quit,
     showTestNotification: api.system.showTestNotification,
     onPreferencesChanged: api.preferences.onChanged,

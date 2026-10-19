@@ -6,6 +6,7 @@ import { CHANNELS } from "../shared/api";
 import { openDatabase } from "./db/database";
 import { createStore } from "./db/store";
 import { selectDetector, shouldUseMockDetection } from "./detection";
+import { DEFAULT_SIZES } from "../shared/windowSizes";
 import { registerIpc } from "./ipc";
 import { createReminderScheduler, type ReminderScheduler } from "./reminders/scheduler";
 import { applyAlwaysOnTop, isMac, isWindows, setLaunchOnLogin, showNotification } from "./platform";
@@ -87,6 +88,8 @@ void app.whenReady().then(() => {
     beginResize: (axis) => widget?.beginResize(axis),
     endResize: () => widget?.endResize(),
     resetSize: () => widget?.resetSize(),
+    setLayoutSize: (layout, size) => widget?.setLayoutSize(layout, size) ?? size,
+    getLayoutSizes: () => widget?.getLayoutSizes() ?? DEFAULT_SIZES,
     quit: () => app.quit(),
     applyPreferences,
     showTestNotification: () => void showNotification("SubSentry", "Notifications are working. You will be reminded before renewals.", () => widget?.show()),
