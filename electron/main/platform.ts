@@ -11,6 +11,14 @@ import { join } from "node:path";
 export const isMac = process.platform === "darwin";
 export const isWindows = process.platform === "win32";
 
+/** "Desktop mode" (widget kept behind other windows) is implemented for Windows only. */
+export const supportsDesktopMode = isWindows;
+
+/** Windows PowerShell 5.1 ships with every Windows 10/11, at a fixed path (no PATH lookup). */
+export function powershellPath(): string {
+  return join(process.env["SystemRoot"] ?? "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+}
+
 /** Frameless, transparent, non-resizable widget window options. */
 export function widgetWindowOptions(): BrowserWindowConstructorOptions {
   return {
@@ -18,6 +26,9 @@ export function widgetWindowOptions(): BrowserWindowConstructorOptions {
     transparent: true,
     backgroundColor: "#00000000",
     hasShadow: false, // the card draws its own soft shadow
+    // macOS: the first click on an unfocused window normally only focuses it and never reaches the page,
+    // which would swallow a resize-grip press (and the first click on any button) on a background widget.
+    acceptFirstMouse: true,
     resizable: false, // size changes only via our compact/expanded modes
     maximizable: false,
     fullscreenable: false,

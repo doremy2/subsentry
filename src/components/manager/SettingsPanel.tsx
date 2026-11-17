@@ -1,18 +1,55 @@
-import { ACCENTS, OPACITY_RANGE, REMINDER_LEAD_OPTIONS, type Accent } from "../../data/types";
+import { ACCENTS, COMPACT_LAYOUTS, OPACITY_RANGE, REMINDER_LEAD_OPTIONS, THEMES, type Accent, type CompactLayout, type Theme } from "../../data/types";
 import { useApp } from "../../state/appContext";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
+import { CustomSizeForm } from "./CustomSizeForm";
 
 const SWATCH: Record<Accent, string> = { indigo: "#8b8cff", teal: "#4fd1c5", rose: "#ff7a9c", amber: "#f5b84b" };
 
+/** Mini previews for the theme picker: card background + highlight. */
+const THEME_PREVIEW: Record<Theme, { label: string; background: string }> = {
+  midnight: { label: "Midnight", background: "linear-gradient(135deg, #1b1d2b, #0f1018)" },
+  graphite: { label: "Graphite", background: "linear-gradient(135deg, #3a3a40, #1d1d20)" },
+  aurora: { label: "Aurora", background: "linear-gradient(135deg, #14707a 0%, #06151e 55%, #3a3f9a 100%)" },
+  sunset: { label: "Sunset", background: "linear-gradient(135deg, #b4521f 0%, #1f0e1d 55%, #a11d63 100%)" },
+  light: { label: "Light", background: "linear-gradient(135deg, #ffffff, #e4e7f2)" },
+};
+
+const LAYOUT_LABEL: Record<CompactLayout, string> = { detailed: "Detailed", minimal: "Minimal" };
+
 /** Appearance and window preferences. Every control here is persisted. */
 export function SettingsPanel() {
-  const { preferences, updatePreferences, reportError, hideWindow, quit, showTestNotification, platform } = useApp();
+  const { preferences, updatePreferences, reportError, hideWindow, quit, showTestNotification, platform, resetWindowSize } = useApp();
   const trayName = platform === "darwin" ? "menu bar" : "tray";
   const update = (patch: Parameters<typeof updatePreferences>[0]) => void updatePreferences(patch).catch(reportError);
 
   return (
     <section aria-label="Appearance and window settings" className="space-y-4">
+      <div>
+        <h3 className="mb-2 text-xs font-medium uppercase tracking-[0.14em] text-white/40">Theme</h3>
+        <div role="radiogroup" aria-label="Theme" className="grid grid-cols-5 gap-1.5">
+          {THEMES.map((theme) => {
+            const { label, background } = THEME_PREVIEW[theme];
+            const selected = preferences.theme === theme;
+            return (
+              <button
+                key={theme}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                aria-label={label}
+                title={label}
+                onClick={() => update({ theme })}
+                className={`group flex flex-col items-center gap-1 rounded-xl p-1 transition hover:scale-105 active:scale-95 ${selected ? "bg-white/10" : ""}`}
+              >
+                <span className={`block h-7 w-full rounded-lg border transition ${selected ? "border-accent" : "border-white/15"}`} style={{ background }} />
+                <span className={`text-[10px] ${selected ? "text-white" : "text-white/50"}`}>{label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div>
         <h3 className="mb-2 text-xs font-medium uppercase tracking-[0.14em] text-white/40">Accent</h3>
         <div role="radiogroup" aria-label="Accent color" className="flex gap-2">
@@ -49,6 +86,29 @@ export function SettingsPanel() {
         />
       </div>
 
+      <div>
+        <h3 className="mb-2 text-xs font-medium uppercase tracking-[0.14em] text-white/40">Widget layout</h3>
+        <div role="radiogroup" aria-label="Compact layout" className="flex gap-1 rounded-xl bg-white/[0.05] p-1">
+          {COMPACT_LAYOUTS.map((layout) => (
+            <button
+              key={layout}
+              type="button"
+              role="radio"
+              aria-checked={preferences.compactLayout === layout}
+              onClick={() => update({ compactLayout: layout })}
+              className={`flex-1 rounded-lg px-3 py-1 text-xs font-medium transition ${preferences.compactLayout === layout ? "bg-white/15 text-white" : "text-white/55 hover:text-white"}`}
+            >
+              {LAYOUT_LABEL[layout]}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1.5 text-[11px] text-white/40">Drag the widget's right or bottom edge, or its corner, to resize it.</p>
+        <CustomSizeForm />
+        {platform !== "web" && (
+          <Button className="mt-2 w-full !py-1.5 text-xs" onClick={() => void resetWindowSize().catch(reportError)}>Reset window size</Button>
+        )}
+      </div>
+
       <label className="flex cursor-pointer items-center justify-between gap-3">
         <span>
           <span className="block text-sm">Always on top</span>
@@ -62,6 +122,27 @@ export function SettingsPanel() {
           className="size-4 accent-[var(--accent)]"
         />
       </label>
+
+      {platform === "win32" && (
+        <label className="flex cursor-pointer items-start justify-between gap-3">
+          <span>
+            <span className="block text-sm">
+              Desktop mode <span className="ml-1 rounded bg-warn/20 px-1.5 text-[10px] font-semibold text-warn">EXPERIMENTAL</span>
+            </span>
+            <span className="block text-xs text-white/45">
+              Keep the widget behind your other windows like a desktop gadget. Click it to use it; it drops back when you click elsewhere. Replaces "Always on top".
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            aria-label="Desktop mode"
+            checked={preferences.desktopMode}
+            onChange={(e) => update({ desktopMode: e.target.checked })}
+            className="mt-1 size-4 shrink-0 accent-[var(--accent)]"
+          />
+        </label>
+      )}
 
       <label className="flex cursor-pointer items-center justify-between gap-3">
         <span>

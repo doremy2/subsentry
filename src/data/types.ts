@@ -24,11 +24,26 @@ export type Accent = (typeof ACCENTS)[number];
 
 export type WidgetMode = "compact" | "expanded";
 
+/** Visual themes. All are dark except "light"; see src/styles/index.css. */
+export const THEMES = ["midnight", "graphite", "aurora", "sunset", "light"] as const;
+export type Theme = (typeof THEMES)[number];
+
+/** Compact widget content: "detailed" lists upcoming renewals, "minimal" shows only spend + next payment. */
+export const COMPACT_LAYOUTS = ["detailed", "minimal"] as const;
+export type CompactLayout = (typeof COMPACT_LAYOUTS)[number];
+
 export interface Preferences {
+  theme: Theme;
+  compactLayout: CompactLayout;
   accent: Accent;
   /** Surface opacity, 0.4 (see-through) to 1 (solid). */
   opacity: number;
   alwaysOnTop: boolean;
+  /**
+   * Windows only, experimental: keep the widget behind other windows like a desktop gadget (still clickable).
+   * Mutually exclusive with `alwaysOnTop`. Ignored on other platforms.
+   */
+  desktopMode: boolean;
   mode: WidgetMode;
   /** Start SubSentry when the user logs in (applied through the OS login-item API). */
   launchOnLogin: boolean;
@@ -41,9 +56,12 @@ export interface Preferences {
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
+  theme: "midnight",
+  compactLayout: "detailed",
   accent: "indigo",
   opacity: 0.82,
   alwaysOnTop: false,
+  desktopMode: false,
   mode: "compact",
   launchOnLogin: false,
   remindersEnabled: true,

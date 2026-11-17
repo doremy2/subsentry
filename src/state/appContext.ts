@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
 import type { Preferences, WidgetMode } from "../data/types";
+import type { LayoutKey, Size } from "../../electron/shared/windowSizes";
 import type { Subscription, SubscriptionInput } from "../domain/subscription";
 
 export type AppStatus = "loading" | "ready" | "error";
@@ -22,6 +23,13 @@ export interface AppActions {
   updatePreferences(patch: Partial<Preferences>): Promise<void>;
   setMode(mode: WidgetMode): Promise<void>;
   hideWindow(): Promise<void>;
+  /** Window resize via grips (no-ops in a browser preview). */
+  beginResize(axis: "both" | "x" | "y"): Promise<void>;
+  endResize(): Promise<void>;
+  resetWindowSize(): Promise<void>;
+  /** Custom size (window px incl. shadow margin); resolves with the size that actually fits. */
+  setLayoutSize(layout: LayoutKey, size: Size): Promise<Size>;
+  getLayoutSizes(): Promise<Record<LayoutKey, Size>>;
   quit(): Promise<void>;
   showTestNotification(): Promise<void>;
   /** "darwin" | "win32" | "linux" in Electron, "web" in a browser preview. */

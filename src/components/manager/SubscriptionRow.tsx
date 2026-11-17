@@ -37,7 +37,7 @@ export function SubscriptionRow({ subscription: sub, today, onEdit, onDelete, in
   }
 
   return (
-    <li className="panel animate-fade-up group flex items-center gap-4 rounded-2xl px-4 py-3 transition hover:bg-white/[0.07]" style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}>
+    <li className="panel lift animate-fade-up group flex items-center gap-4 rounded-2xl px-4 py-3 transition hover:bg-white/[0.07]" style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}>
       <MerchantAvatar name={sub.merchant} size={40} dimmed={!live} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">

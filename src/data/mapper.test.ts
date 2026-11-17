@@ -26,6 +26,24 @@ describe("sanitizePreferencePatch", () => {
   });
 });
 
+describe("theme and layout preferences", () => {
+  it("decodes and sanitizes theme and compactLayout", () => {
+    expect(decodePreferences([{ key: "theme", value: '"sunset"' }, { key: "compactLayout", value: '"minimal"' }])).toMatchObject({ theme: "sunset", compactLayout: "minimal" });
+    expect(decodePreferences([{ key: "theme", value: '"neon"' }, { key: "compactLayout", value: "3" }])).toMatchObject({ theme: "midnight", compactLayout: "detailed" });
+    expect(sanitizePreferencePatch({ theme: "light", compactLayout: "huge" })).toEqual({ theme: "light" });
+  });
+});
+
+describe("desktopMode preference", () => {
+  it("defaults to off, decodes booleans only, and is whitelisted from the renderer", () => {
+    expect(decodePreferences([]).desktopMode).toBe(false);
+    expect(decodePreferences([{ key: "desktopMode", value: "true" }]).desktopMode).toBe(true);
+    expect(decodePreferences([{ key: "desktopMode", value: '"yes"' }]).desktopMode).toBe(false);
+    expect(sanitizePreferencePatch({ desktopMode: true })).toEqual({ desktopMode: true });
+    expect(sanitizePreferencePatch({ desktopMode: "true" })).toEqual({});
+  });
+});
+
 describe("memory services", () => {
   it("supports create, update, remove", async () => {
     const { subscriptions } = createMemoryServices();
