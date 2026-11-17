@@ -11,6 +11,14 @@ import { join } from "node:path";
 export const isMac = process.platform === "darwin";
 export const isWindows = process.platform === "win32";
 
+/** "Desktop mode" (widget kept behind other windows) is implemented for Windows only. */
+export const supportsDesktopMode = isWindows;
+
+/** Windows PowerShell 5.1 ships with every Windows 10/11, at a fixed path (no PATH lookup). */
+export function powershellPath(): string {
+  return join(process.env["SystemRoot"] ?? "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+}
+
 /** Frameless, transparent, non-resizable widget window options. */
 export function widgetWindowOptions(): BrowserWindowConstructorOptions {
   return {

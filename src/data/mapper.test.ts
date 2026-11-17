@@ -34,6 +34,16 @@ describe("theme and layout preferences", () => {
   });
 });
 
+describe("desktopMode preference", () => {
+  it("defaults to off, decodes booleans only, and is whitelisted from the renderer", () => {
+    expect(decodePreferences([]).desktopMode).toBe(false);
+    expect(decodePreferences([{ key: "desktopMode", value: "true" }]).desktopMode).toBe(true);
+    expect(decodePreferences([{ key: "desktopMode", value: '"yes"' }]).desktopMode).toBe(false);
+    expect(sanitizePreferencePatch({ desktopMode: true })).toEqual({ desktopMode: true });
+    expect(sanitizePreferencePatch({ desktopMode: "true" })).toEqual({});
+  });
+});
+
 describe("memory services", () => {
   it("supports create, update, remove", async () => {
     const { subscriptions } = createMemoryServices();

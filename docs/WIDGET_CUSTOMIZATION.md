@@ -42,7 +42,9 @@ Goal: the widget sits on the desktop like a Rainmeter skin (behind normal window
 | **B. Bottom-most layer** (`SetWindowPos(HWND_BOTTOM)`) | Behind all normal windows, above wallpaper and icons; fully interactive while visible | Yes: an FFI library (e.g. koffi) or a small helper process | Clicking raises the window, so it must be pushed back on blur; **Win+D hides it** unless handled; hidden whenever a window covers it |
 | **C. Wallpaper-layer embed** (parent into `WorkerW`) | Part of the desktop itself; survives Win+D | Yes | The desktop host does not deliver mouse input to children, so "clickable" needs global input hooks + forwarding: fragile; most work |
 
-Recommendation: keep A, then build B behind an opt-in "Desktop mode" setting for Windows, developed **with live testing on a Windows machine** (Win+D and focus behaviour can only be settled by trying them). Avoid C. Nothing here is implemented yet.
+Recommendation: keep A, then build B behind an opt-in "Desktop mode" setting for Windows, developed **with live testing on a Windows machine** (Win+D and focus behaviour can only be settled by trying them). Avoid C.
+
+**Update:** option B is implemented as an experimental, opt-in setting on `feature/windows-desktop-mode`, using a small hidden PowerShell helper (no native module). It is unit-tested on Linux but **not verified on Windows**: see `docs/DESKTOP_MODE.md`.
 
 ## Custom size
 Settings > Widget layout > Custom size: type an exact width and height for Compact (Detailed), Compact (Minimal) or Expanded. Numbers are the **visible widget** in screen points (window size minus the 16 px shadow margin on each side; the same value on Retina and standard displays). Validation is whole numbers within the layout's limits (`cardLimits`, `parseCustomSize` in `electron/shared/windowSizes.ts`); out-of-range input is rejected with the allowed range. Applying uses the same clamp, persist and fit-to-screen code as dragging (`setLayoutSize` in `window.ts`) and tells you if the screen forced a smaller size. Limits (visible widget px): compact 320-528 x 428-868, minimal 320-528 x 264-388, expanded 788-1568 x 528-1068.

@@ -51,7 +51,10 @@ node -e "const {DatabaseSync}=require('node:sqlite');const d=new DatabaseSync(pr
 
 **Launch at login** only works in the installed build (Settings > Launch at login, then sign out/in).
 
-## 3. The installer (optional but valuable)
+## 3. Desktop mode (experimental)
+See `docs/DESKTOP_MODE.md` for what it is and the 9-step test plan.
+
+## 4. The installer (optional but valuable)
 1. GitHub > Actions > the latest green run on the branch > Artifacts > **SubSentry-windows**. Extract it.
 2. Run `SubSentry-Setup.exe`. Windows SmartScreen will warn (the build is unsigned): **More info > Run anyway**.
 3. Repeat a quick resize, theme, quit/relaunch and test-notification check.

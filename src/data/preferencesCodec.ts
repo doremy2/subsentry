@@ -38,6 +38,9 @@ export function decodePreferences(rows: PreferenceRows): Preferences {
   const alwaysOnTop = raw.get("alwaysOnTop");
   if (typeof alwaysOnTop === "boolean") prefs.alwaysOnTop = alwaysOnTop;
 
+  const desktopMode = raw.get("desktopMode");
+  if (typeof desktopMode === "boolean") prefs.desktopMode = desktopMode;
+
   const mode = raw.get("mode");
   if (mode === "compact" || mode === "expanded") prefs.mode = mode;
 
@@ -77,6 +80,7 @@ export function sanitizePreferencePatch(input: unknown): Partial<Preferences> {
     patch.opacity = Math.min(OPACITY_RANGE.max, Math.max(OPACITY_RANGE.min, raw["opacity"]));
   }
   if (typeof raw["alwaysOnTop"] === "boolean") patch.alwaysOnTop = raw["alwaysOnTop"];
+  if (typeof raw["desktopMode"] === "boolean") patch.desktopMode = raw["desktopMode"];
   if (raw["mode"] === "compact" || raw["mode"] === "expanded") patch.mode = raw["mode"];
   if (typeof raw["launchOnLogin"] === "boolean") patch.launchOnLogin = raw["launchOnLogin"];
   if (typeof raw["remindersEnabled"] === "boolean") patch.remindersEnabled = raw["remindersEnabled"];

@@ -39,6 +39,11 @@ export interface Preferences {
   /** Surface opacity, 0.4 (see-through) to 1 (solid). */
   opacity: number;
   alwaysOnTop: boolean;
+  /**
+   * Windows only, experimental: keep the widget behind other windows like a desktop gadget (still clickable).
+   * Mutually exclusive with `alwaysOnTop`. Ignored on other platforms.
+   */
+  desktopMode: boolean;
   mode: WidgetMode;
   /** Start SubSentry when the user logs in (applied through the OS login-item API). */
   launchOnLogin: boolean;
@@ -56,6 +61,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   accent: "indigo",
   opacity: 0.82,
   alwaysOnTop: false,
+  desktopMode: false,
   mode: "compact",
   launchOnLogin: false,
   remindersEnabled: true,

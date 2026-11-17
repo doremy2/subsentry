@@ -123,6 +123,27 @@ export function SettingsPanel() {
         />
       </label>
 
+      {platform === "win32" && (
+        <label className="flex cursor-pointer items-start justify-between gap-3">
+          <span>
+            <span className="block text-sm">
+              Desktop mode <span className="ml-1 rounded bg-warn/20 px-1.5 text-[10px] font-semibold text-warn">EXPERIMENTAL</span>
+            </span>
+            <span className="block text-xs text-white/45">
+              Keep the widget behind your other windows like a desktop gadget. Click it to use it; it drops back when you click elsewhere. Replaces "Always on top".
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            aria-label="Desktop mode"
+            checked={preferences.desktopMode}
+            onChange={(e) => update({ desktopMode: e.target.checked })}
+            className="mt-1 size-4 shrink-0 accent-[var(--accent)]"
+          />
+        </label>
+      )}
+
       <label className="flex cursor-pointer items-center justify-between gap-3">
         <span>
           <span className="block text-sm">Launch at login</span>

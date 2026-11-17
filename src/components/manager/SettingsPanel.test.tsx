@@ -46,4 +46,25 @@ describe("SettingsPanel appearance and layout", () => {
     render(withApp(appValue({ platform: "web" }), <SettingsPanel />));
     expect(screen.queryByText("Reset window size")).toBeNull();
   });
+
+  it("offers Desktop mode (experimental) on Windows only", () => {
+    const { unmount } = render(withApp(appValue({ platform: "win32" }), <SettingsPanel />));
+    expect(screen.getByRole("switch", { name: "Desktop mode" })).toBeTruthy();
+    expect(screen.getByText("EXPERIMENTAL")).toBeTruthy();
+    unmount();
+    for (const platform of ["darwin", "linux", "web"]) {
+      render(withApp(appValue({ platform }), <SettingsPanel />));
+      expect(screen.queryByRole("switch", { name: "Desktop mode" })).toBeNull();
+      cleanup();
+    }
+  });
+
+  it("toggling Desktop mode persists the preference and reflects the saved value", () => {
+    const value = appValue({ platform: "win32", preferences: { ...DEFAULT_PREFERENCES, desktopMode: true } });
+    render(withApp(value, <SettingsPanel />));
+    const toggle = screen.getByRole("switch", { name: "Desktop mode" }) as HTMLInputElement;
+    expect(toggle.checked).toBe(true);
+    fireEvent.click(toggle);
+    expect(value.updatePreferences).toHaveBeenCalledWith({ desktopMode: false });
+  });
 });
