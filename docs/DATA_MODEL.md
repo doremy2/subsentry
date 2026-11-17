@@ -20,7 +20,7 @@ Storage: `subsentry.db` in Electron's `userData` folder, opened by the main proc
 ## Preferences
 
 Key/value table: `preferences(key TEXT PRIMARY KEY, value TEXT)`, values are JSON.
-Keys: `accent`, `opacity` (0.4-1), `alwaysOnTop`, `mode` (`compact|expanded`), `launchOnLogin`, `remindersEnabled` (default true), `reminderLeadDays` (0-30, default 3), `reminderHour` (0-23, default 9), `seeded` (demo data inserted once), `windowPositions` (`{ [deviceId]: {x,y} }` in screen DIPs; `deviceId` = hash of host + user + OS, so positions never leak between machines).
+Keys: `theme` (`midnight|graphite|aurora|sunset|light`), `compactLayout` (`detailed|minimal`), `accent`, `opacity` (0.4-1), `alwaysOnTop`, `mode` (`compact|expanded`), `launchOnLogin`, `remindersEnabled` (default true), `reminderLeadDays` (0-30, default 3), `reminderHour` (0-23, default 9), `seeded` (demo data inserted once), `windowSizes` (`{ [deviceId]: { compact?, minimal?, expanded?: {width,height} } }` in DIPs, one size per layout), `windowPositions` (`{ [deviceId]: {x,y} }` in screen DIPs; `deviceId` = hash of host + user + OS, so positions never leak between machines).
 Decoding is defensive (`src/data/preferencesCodec.ts`): bad values fall back to defaults. Patches from the renderer are whitelisted with `sanitizePreferencePatch`.
 
 ## Rules

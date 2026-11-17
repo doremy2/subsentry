@@ -6,6 +6,7 @@ import { runDetection } from "../../src/domain/detection/run";
 import type { SubscriptionDetector } from "../../src/domain/detection/types";
 import { parseSubscriptionInput } from "../../src/domain/validation";
 import { CHANNELS, type IpcResult } from "../shared/api";
+import { isLayoutKey, type LayoutKey, type Size } from "../shared/windowSizes";
 import type { Store } from "./db/store";
 
 export interface IpcDependencies {
@@ -14,6 +15,11 @@ export interface IpcDependencies {
   trustedSender: () => WebContents | undefined;
   setMode(mode: WidgetMode): void;
   hideWindow(): void;
+  beginResize(axis: "both" | "x" | "y"): void;
+  endResize(): void;
+  resetSize(): void;
+  setLayoutSize(layout: LayoutKey, size: Size): Size;
+  getLayoutSizes(): Record<LayoutKey, Size>;
   quit(): void;
   /** Apply OS side effects of a preference change (always-on-top, login item, tray check mark). */
   applyPreferences(prefs: Preferences, patch: Partial<Preferences>): void;
@@ -73,6 +79,19 @@ export function registerIpc(deps: IpcDependencies): void {
     store.savePreferences({ mode });
   });
   handle(CHANNELS.windowHide, deps, () => deps.hideWindow());
+  handle(CHANNELS.windowResizeStart, deps, (axis) => {
+    if (axis !== "both" && axis !== "x" && axis !== "y") throw new Error("Invalid resize axis.");
+    deps.beginResize(axis);
+  });
+  handle(CHANNELS.windowResizeEnd, deps, () => deps.endResize());
+  handle(CHANNELS.windowResetSize, deps, () => deps.resetSize());
+  handle(CHANNELS.windowSetLayoutSize, deps, (layout, size) => {
+    const s = size as Partial<Size> | null;
+    const ok = (n: unknown): n is number => typeof n === "number" && Number.isInteger(n) && n > 0 && n < 20_000;
+    if (!isLayoutKey(layout) || !s || !ok(s.width) || !ok(s.height)) throw new Error("Invalid window size.");
+    return deps.setLayoutSize(layout, { width: s.width, height: s.height });
+  });
+  handle(CHANNELS.windowGetSizes, deps, () => deps.getLayoutSizes());
   handle(CHANNELS.appQuit, deps, () => deps.quit());
   handle(CHANNELS.systemTestNotification, deps, () => deps.showTestNotification());
 

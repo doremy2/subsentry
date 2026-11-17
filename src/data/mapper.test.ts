@@ -26,6 +26,14 @@ describe("sanitizePreferencePatch", () => {
   });
 });
 
+describe("theme and layout preferences", () => {
+  it("decodes and sanitizes theme and compactLayout", () => {
+    expect(decodePreferences([{ key: "theme", value: '"sunset"' }, { key: "compactLayout", value: '"minimal"' }])).toMatchObject({ theme: "sunset", compactLayout: "minimal" });
+    expect(decodePreferences([{ key: "theme", value: '"neon"' }, { key: "compactLayout", value: "3" }])).toMatchObject({ theme: "midnight", compactLayout: "detailed" });
+    expect(sanitizePreferencePatch({ theme: "light", compactLayout: "huge" })).toEqual({ theme: "light" });
+  });
+});
+
 describe("memory services", () => {
   it("supports create, update, remove", async () => {
     const { subscriptions } = createMemoryServices();

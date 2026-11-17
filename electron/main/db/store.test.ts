@@ -38,4 +38,25 @@ describe("sqlite store", () => {
     expect(store.getWindowPosition("win-device")).toEqual({ x: 300, y: 400 });
     expect(store.getWindowPosition("other")).toBeNull();
   });
+
+  it("remembers window sizes per device and per layout, and can reset them", () => {
+    const store = createStore(openDatabase(":memory:"));
+    expect(store.getWindowSize("mac", "compact")).toBeNull();
+    store.setWindowSize("mac", "compact", { width: 420, height: 600 });
+    store.setWindowSize("mac", "expanded", { width: 1100, height: 700 });
+    store.setWindowSize("win", "compact", { width: 380, height: 500 });
+    expect(store.getWindowSize("mac", "compact")).toEqual({ width: 420, height: 600 });
+    expect(store.getWindowSize("mac", "expanded")).toEqual({ width: 1100, height: 700 });
+    expect(store.getWindowSize("mac", "minimal")).toBeNull();
+    expect(store.getWindowSize("win", "compact")).toEqual({ width: 380, height: 500 });
+    store.clearWindowSizes("mac");
+    expect(store.getWindowSize("mac", "compact")).toBeNull();
+    expect(store.getWindowSize("win", "compact")).toEqual({ width: 380, height: 500 }); // other device untouched
+  });
+
+  it("persists theme and compact layout preferences", () => {
+    const store = createStore(openDatabase(":memory:"));
+    expect(store.loadPreferences()).toMatchObject({ theme: "midnight", compactLayout: "detailed" });
+    expect(store.savePreferences({ theme: "aurora", compactLayout: "minimal" })).toMatchObject({ theme: "aurora", compactLayout: "minimal" });
+  });
 });

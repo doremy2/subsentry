@@ -1,4 +1,4 @@
-import { ACCENTS, DEFAULT_PREFERENCES, OPACITY_RANGE, REMINDER_MAX_LEAD_DAYS, type Preferences } from "./types";
+import { ACCENTS, COMPACT_LAYOUTS, DEFAULT_PREFERENCES, THEMES, OPACITY_RANGE, REMINDER_MAX_LEAD_DAYS, type Preferences } from "./types";
 
 const isInt = (value: unknown, min: number, max: number): value is number =>
   typeof value === "number" && Number.isInteger(value) && value >= min && value <= max;
@@ -21,6 +21,11 @@ function parse(text: string): unknown {
 export function decodePreferences(rows: PreferenceRows): Preferences {
   const raw = new Map(rows.map((row) => [row.key, parse(row.value)]));
   const prefs: Preferences = { ...DEFAULT_PREFERENCES };
+
+  const theme = raw.get("theme");
+  if (typeof theme === "string" && (THEMES as readonly string[]).includes(theme)) prefs.theme = theme as Preferences["theme"];
+  const compactLayout = raw.get("compactLayout");
+  if (typeof compactLayout === "string" && (COMPACT_LAYOUTS as readonly string[]).includes(compactLayout)) prefs.compactLayout = compactLayout as Preferences["compactLayout"];
 
   const accent = raw.get("accent");
   if (typeof accent === "string" && (ACCENTS as readonly string[]).includes(accent)) prefs.accent = accent as Preferences["accent"];
@@ -63,6 +68,10 @@ export function sanitizePreferencePatch(input: unknown): Partial<Preferences> {
   if (!input || typeof input !== "object") return {};
   const raw = input as Record<string, unknown>;
   const patch: Partial<Preferences> = {};
+  if (typeof raw["theme"] === "string" && (THEMES as readonly string[]).includes(raw["theme"])) patch.theme = raw["theme"] as Preferences["theme"];
+  if (typeof raw["compactLayout"] === "string" && (COMPACT_LAYOUTS as readonly string[]).includes(raw["compactLayout"])) {
+    patch.compactLayout = raw["compactLayout"] as Preferences["compactLayout"];
+  }
   if (typeof raw["accent"] === "string" && (ACCENTS as readonly string[]).includes(raw["accent"])) patch.accent = raw["accent"] as Preferences["accent"];
   if (typeof raw["opacity"] === "number" && Number.isFinite(raw["opacity"])) {
     patch.opacity = Math.min(OPACITY_RANGE.max, Math.max(OPACITY_RANGE.min, raw["opacity"]));
