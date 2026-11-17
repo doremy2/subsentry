@@ -2,7 +2,7 @@ import { BrowserWindow, screen, shell } from "electron";
 import { join } from "node:path";
 import type { WidgetMode } from "../../src/data/types";
 import { EMPTY_PLACEMENT, originOnCollapse, rememberAfterExpand, rememberBeforeExpand, type PlacementMemory, type Point } from "../shared/windowPlacement";
-import { clampSize, DEFAULT_SIZES, LAYOUT_KEYS, layoutKeyFor, resizedSize, type LayoutKey, type ResizeAxis, type Size } from "../shared/windowSizes";
+import { clampSize, DEFAULT_SIZES, LAYOUT_KEYS, layoutKeyFor, resizedSize, sizesMatch, type LayoutKey, type ResizeAxis, type Size } from "../shared/windowSizes";
 import type { Store } from "./db/store";
 import { applyAlwaysOnTop, deviceId, widgetWindowOptions } from "./platform";
 
@@ -203,10 +203,10 @@ export function createWidgetWindow(store: Store, options: { mode: WidgetMode; al
         const next = resizedSize(start.size, { dx: cursor.x - start.cursor.x, dy: cursor.y - start.cursor.y }, axis, key, roomFrom({ x, y, width: 1, height: 1 }));
         const [w = 0, h = 0] = window.getSize();
         ticks += 1;
-        if (next.width !== w || next.height !== h) {
+        if (!sizesMatch(next, { width: w, height: h })) {
           window.setBounds({ x, y, ...next });
           const [aw = 0, ah = 0] = window.getSize();
-          if (aw !== next.width || ah !== next.height) {
+          if (!sizesMatch(next, { width: aw, height: ah })) {
             ineffective += 1;
             if (ineffective === 10) logResize(`WARNING setBounds had no effect: requested ${next.width}x${next.height}, window is ${aw}x${ah}`);
           } else ineffective = 0;

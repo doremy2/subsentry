@@ -65,6 +65,15 @@ export function resizedSize(start: Size, delta: { dx: number; dy: number }, axis
   );
 }
 
+/**
+ * Sizes within `tolerance` DIPs count as equal. On Windows with fractional display scaling (125%, 150%...)
+ * a window's size is rounded to physical pixels, so it can read back 1 DIP off from what was requested;
+ * without a tolerance the resize loop would call `setBounds` every tick chasing a difference it can never remove.
+ */
+export function sizesMatch(a: Size, b: Size, tolerance = 1): boolean {
+  return Math.abs(a.width - b.width) <= tolerance && Math.abs(a.height - b.height) <= tolerance;
+}
+
 export function isSize(value: unknown): value is Size {
   const v = value as Partial<Size> | null;
   return !!v && typeof v === "object" && Number.isFinite(v.width) && Number.isFinite(v.height);

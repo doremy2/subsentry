@@ -28,6 +28,22 @@ Electron cannot reliably resize *transparent frameless* windows from their nativ
 - hover hints: faint corner icon, accent pill on edge hover
 - `SUBSENTRY_DEBUG_RESIZE=1` logs `begin/tick/end` and warns when `setBounds` has no effect
 
+## Windows
+- Electron's own docs list limits for transparent windows: they are not natively resizable and the transparent area cannot be clicked through ([frameless window docs](https://www.electronjs.org/docs/latest/api/frameless-window), [issue #1335](https://github.com/electron/electron/issues/1335)). That is why `resizable` stays `false` and resizing is done by our own grips + `setBounds`, and why every grip reaches well inside the opaque card.
+- With fractional display scaling (125%, 150%) Windows rounds sizes to physical pixels, so a window can read back 1 DIP off. The resize loop treats sizes within 1 DIP as equal (`sizesMatch`) instead of re-applying bounds every tick.
+- Verified on a real Windows runner (CI): install, typecheck, lint, 186 unit tests, installer build. **Not verified:** the window itself on a Windows desktop. Use `docs/TESTING_WINDOWS.md`.
+
+## Desktop-layer widget (not built; options)
+Goal: the widget sits on the desktop like a Rainmeter skin (behind normal windows, above the wallpaper), stays clickable, and can be resized and restyled. Electron 44 has **no API to send a window to the bottom of the z-order** (only `moveTop` and `moveAbove(otherWindow)`; Electron's `backgroundMaterial` (Mica/Acrylic, Windows 11 22H2+ only) paints a backdrop for the whole window rectangle, which would probably not fit a rounded card inside a transparent margin; untested). Community packages that do it ([electron-bottom-window](https://github.com/tuj84257/electron-bottom-window), [electget](https://github.com/fronterior/electget), [electron-bottom-most](https://www.npmjs.com/package/electron-bottom-most)) wrap native Win32 calls and were last updated in 2022.
+
+| Option | Behaviour | Needs native code | Main risks |
+|---|---|---|---|
+| **A. Always on top** (exists) + show/hide hotkey | Floats above other windows, interactive | No | Covers other windows; not "on the desktop" |
+| **B. Bottom-most layer** (`SetWindowPos(HWND_BOTTOM)`) | Behind all normal windows, above wallpaper and icons; fully interactive while visible | Yes: an FFI library (e.g. koffi) or a small helper process | Clicking raises the window, so it must be pushed back on blur; **Win+D hides it** unless handled; hidden whenever a window covers it |
+| **C. Wallpaper-layer embed** (parent into `WorkerW`) | Part of the desktop itself; survives Win+D | Yes | The desktop host does not deliver mouse input to children, so "clickable" needs global input hooks + forwarding: fragile; most work |
+
+Recommendation: keep A, then build B behind an opt-in "Desktop mode" setting for Windows, developed **with live testing on a Windows machine** (Win+D and focus behaviour can only be settled by trying them). Avoid C. Nothing here is implemented yet.
+
 ## Custom size
 Settings > Widget layout > Custom size: type an exact width and height for Compact (Detailed), Compact (Minimal) or Expanded. Numbers are the **visible widget** in screen points (window size minus the 16 px shadow margin on each side; the same value on Retina and standard displays). Validation is whole numbers within the layout's limits (`cardLimits`, `parseCustomSize` in `electron/shared/windowSizes.ts`); out-of-range input is rejected with the allowed range. Applying uses the same clamp, persist and fit-to-screen code as dragging (`setLayoutSize` in `window.ts`) and tells you if the screen forced a smaller size. Limits (visible widget px): compact 320-528 x 428-868, minimal 320-528 x 264-388, expanded 788-1568 x 528-1068.
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardLimits, clampSize, DEFAULT_SIZES, isLayoutKey, layoutKeyFor, MAX_SIZES, MIN_SIZES, parseCustomSize, resizedSize, toCardSize, toWindowSize, WINDOW_MARGIN } from "./windowSizes";
+import { cardLimits, clampSize, DEFAULT_SIZES, isLayoutKey, layoutKeyFor, MAX_SIZES, MIN_SIZES, parseCustomSize, resizedSize, sizesMatch, toCardSize, toWindowSize, WINDOW_MARGIN } from "./windowSizes";
 
 describe("window size rules", () => {
   it("picks the layout key from mode and compact layout", () => {
@@ -78,5 +78,19 @@ describe("custom size input", () => {
   it("recognises layout keys", () => {
     expect(isLayoutKey("minimal")).toBe(true);
     expect(isLayoutKey("huge")).toBe(false);
+  });
+});
+
+describe("sizesMatch (fractional display scaling on Windows)", () => {
+  it("treats a 1 DIP rounding difference as equal, but not larger differences", () => {
+    expect(sizesMatch({ width: 400, height: 500 }, { width: 401, height: 499 })).toBe(true);
+    expect(sizesMatch({ width: 400, height: 500 }, { width: 400, height: 500 })).toBe(true);
+    expect(sizesMatch({ width: 400, height: 500 }, { width: 403, height: 500 })).toBe(false);
+    expect(sizesMatch({ width: 400, height: 500 }, { width: 400, height: 502 })).toBe(false);
+  });
+  it("tolerance is configurable", () => {
+    expect(sizesMatch({ width: 400, height: 500 }, { width: 402, height: 500 }, 2)).toBe(true);
+    expect(sizesMatch({ width: 400, height: 500 }, { width: 400, height: 500 }, 0)).toBe(true);
+    expect(sizesMatch({ width: 400, height: 500 }, { width: 401, height: 500 }, 0)).toBe(false);
   });
 });
